@@ -192,3 +192,5 @@ Sessionx.vim
 tags
 # Persistent undo
 [._]*.un~
+.scannerwork/.sonar_lock
+.scannerwork/report-task.txt
