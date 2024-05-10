@@ -194,3 +194,4 @@ tags
 [._]*.un~
 .scannerwork/.sonar_lock
 .scannerwork/report-task.txt
+FAIR_eva_eucaim.code-workspace

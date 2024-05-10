@@ -7,7 +7,13 @@ import logging
 import os
 import sys
 import api.utils as ut
-from api.evaluator import Evaluator
+import pandas as pd
+from api.evaluator import ConfigTerms, Evaluator
+from fdpclient import operations
+from fdpclient.client import Client
+
+
+
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.DEBUG, format="'%(name)s:%(lineno)s' | %(message)s"
@@ -30,7 +36,7 @@ class Plugin(Evaluator):
 
     lang : Language
     """
-      
+
     def __init__(self, item_id, oai_base=None, lang="en"):
         plugin = "EUCAIM_plugin"
         super().__init__(item_id, oai_base, lang, plugin)
@@ -74,33 +80,13 @@ class Plugin(Evaluator):
         )
         self.metadata_quality = 100  # Value for metadata balancing
 
-
-    # TO REDEFINE - HOW YOU ACCESS METADATA?
     def get_metadata(self):
-        metadata_sample = [
-            ["{http://purl.org/dc/elements/1.1/}", "title", "MyTitle", None],
-            ["{http://purl.org/dc/elements/1.1/}", "creator", "TheCreator", None],
-            ["{http://purl.org/dc/elements/1.1/}", "identifier", "none", None],
-            [
-                "{http://purl.org/dc/elements/1.1/}",
-                "rigths",
-                "https://creativecommons.org/licenses/by/4.0/",
-                None,
-            ],
-            [
-                "{http://purl.org/dc/elements/1.1/}",
-                "description",
-                "This is the description",
-                None,
-            ],
-            ["{http://purl.org/dc/elements/1.1/}", "date", "2019-12-12", None],
-            [
-                "{http://purl.org/dc/elements/1.1/}",
-                "publisher",
-                "Thematic Service",
-                None,
-            ],
-        ]
+        # create a client with base URL
+        client = Client('http://fdp3.healthdataportal.eu')
+        # read metadata, return a RDF graph
+        r = client.read_dataset('c9c36aa0-d035-4d42-bc7c-122035cbacdf')
+        print(r.serialize(format="turtle").decode("utf-8"))
+        metadata_sample = r.serialize(format="json-ld").decode("utf-8")
         return metadata_sample
 
     def rda_a1_01m(self):
@@ -108,12 +94,47 @@ class Plugin(Evaluator):
         points = 0
         msg = "Data is not accessible"
         return (points, msg)
-
+        
     def rda_a1_02m(self):
         # IF your ID is not an standard one (like internal), this method should be redefined
         points = 0
         msg = "Data is not accessible"
         return (points, msg)
+
+    @ConfigTerms(term_id="identifier_term")
+    def rda_f1_01m(self, **kwargs):
+        """Indicator RDA-F1-01M: Metadata is identified by a persistent identifier.
+
+        This indicator is linked to the following principle: F1 (meta)data are assigned a globally
+        unique and eternally persistent identifier. More information about that principle can be found
+        here.
+
+        This indicator evaluates whether or not the metadata is identified by a persistent identifier.
+        A persistent identifier ensures that the metadata will remain findable over time, and reduces
+        the risk of broken links.
+
+        Parameters
+        ----------
+        identifier_term : dict
+            A dictionary with metadata information about the identifier/s used for the metadata (see ConfigTerms class for further details)
+
+        Returns
+        -------
+        points
+            - 0/100   if no persistent identifier is used  for the metadata
+            - 100/100 if a persistent identifier is used for the metadata
+        msg
+            Message with the results or recommendations to improve this indicator
+        """
+        term_data = kwargs["identifier_term"]
+        term_metadata = term_data["metadata"]
+
+        id_list = term_metadata.text_value.values
+
+        points, msg_list = self.eval_persistency(id_list, data_or_metadata="metadata")
+        logger.debug(msg_list)
+
+        return (points, msg_list)
 
     def rda_i1_02m(self):
         """Indicator RDA-A1-01M
