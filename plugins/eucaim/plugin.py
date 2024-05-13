@@ -84,22 +84,10 @@ class Plugin(Evaluator):
         # create a client with base URL
         client = Client('http://fdp3.healthdataportal.eu')
         # read metadata, return a RDF graph
-        r = client.read_dataset('c9c36aa0-d035-4d42-bc7c-122035cbacdf')
+        r = client.read_dataset('ec1121de-5d99-4c81-92fb-273419b50386')
         print(r.serialize(format="turtle").decode("utf-8"))
         metadata_sample = r.serialize(format="json-ld").decode("utf-8")
         return metadata_sample
-
-    def rda_a1_01m(self):
-        # IF your ID is not an standard one (like internal), this method should be redefined
-        points = 0
-        msg = "Data is not accessible"
-        return (points, msg)
-        
-    def rda_a1_02m(self):
-        # IF your ID is not an standard one (like internal), this method should be redefined
-        points = 0
-        msg = "Data is not accessible"
-        return (points, msg)
 
     @ConfigTerms(term_id="identifier_term")
     def rda_f1_01m(self, **kwargs):
