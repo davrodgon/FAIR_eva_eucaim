@@ -38,7 +38,7 @@ class Plugin(Evaluator):
     """
 
     def __init__(self, item_id, oai_base=None, lang="en"):
-        plugin = "EUCAIM_plugin"
+        plugin = "eucaim"
         super().__init__(item_id, oai_base, lang, plugin)
         # TO REDEFINE - WHICH IS YOUR PID TYPE?
         self.id_type = "internal"
@@ -85,8 +85,8 @@ class Plugin(Evaluator):
         client = Client('http://fdp3.healthdataportal.eu')
         # read metadata, return a RDF graph
         r = client.read_dataset('ec1121de-5d99-4c81-92fb-273419b50386')
-        print(r.serialize(format="turtle").decode("utf-8"))
-        metadata_sample = r.serialize(format="json-ld").decode("utf-8")
+        print(r.serialize(format="turtle"))
+        metadata_sample = r.serialize(format="json-ld")
         return metadata_sample
 
     @ConfigTerms(term_id="identifier_term")

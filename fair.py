@@ -4,6 +4,7 @@ import configparser
 import logging
 import os
 import sys
+import json
 
 import connexion
 from connexion.resolver import RestyResolver
@@ -46,7 +47,7 @@ if __name__ == "__main__":
     app = connexion.FlaskApp(__name__)
     app.add_api(
         "fair-api.yaml",
-        arguments={"title": "FAIR evaluator Example"},
+        arguments={"title": "FAIR evaluator EUCAIM"},
         resolver=RestyResolver("api"),
     )
     app.run(port=9090)
