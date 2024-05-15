@@ -81,12 +81,36 @@ class Plugin(Evaluator):
         self.metadata_quality = 100  # Value for metadata balancing
 
     def get_metadata(self):
+        metadata_sample = []
+        eml_schema = "eucaim"
+        final_url = self.oai_base + "/resources/details/" + self.item_id
+
+        error_in_metadata = False
+        headers = {
+            "accept": "application/json",
+        }
+
         # create a client with base URL
         client = Client('http://fdp3.healthdataportal.eu')
         # read metadata, return a RDF graph
         r = client.read_dataset('ec1121de-5d99-4c81-92fb-273419b50386')
-        print(r.serialize(format="turtle"))
-        metadata_sample = r.serialize(format="json-ld")
+        fdp_json = r.serialize(format="json-ld")
+        print(fdp_json)
+        if not fdp_json:
+            msg = (
+                "Error: empty metadata received from FDP: %s"
+                % final_url
+            )
+            error_in_metadata = True
+        if error_in_metadata:
+            logger.error(msg)
+            raise Exception(msg)
+
+        for s, p, o in r:
+            print("Subject:", s)
+            print("Predicate:", p)
+            print("Object:", o)
+            metadata_sample.append([eml_schema, s, p, o])
         return metadata_sample
 
     @ConfigTerms(term_id="identifier_term")
