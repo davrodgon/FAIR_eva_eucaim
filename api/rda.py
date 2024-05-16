@@ -12,7 +12,7 @@ from api.evaluator import Evaluator
 from fair import app_dirname, load_config
 
 logging.basicConfig(
-    stream=sys.stdout, level=logging.DEBUG, format="'%(name)s:%(lineno)s' | %(message)s"
+    stream=sys.stdout, level=logging.CRITICAL, format="'%(name)s:%(lineno)s' | %(message)s"
 )
 logger = logging.getLogger(os.path.basename(__file__))
 
@@ -62,6 +62,7 @@ def load_evaluator(wrapped_func):
             if repo in ["oai-pmh"]:
                 eva = Evaluator(item_id, oai_base, lang)
             else:
+                print("RDA: item ID ", item_id)
                 eva = plugin.Plugin(item_id, oai_base, lang)
             _result, _exit_code = wrapped_func(body, eva=eva)
             result[item_id] = _result

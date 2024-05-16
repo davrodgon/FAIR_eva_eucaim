@@ -12,9 +12,6 @@ from api.evaluator import ConfigTerms, Evaluator
 from fdpclient import operations
 from fdpclient.client import Client
 
-
-
-
 logging.basicConfig(
     stream=sys.stdout, level=logging.DEBUG, format="'%(name)s:%(lineno)s' | %(message)s"
 )
@@ -39,6 +36,7 @@ class Plugin(Evaluator):
 
     def __init__(self, item_id, oai_base=None, lang="en"):
         plugin = "eucaim"
+        print("EUCAIM plugin: Identifier ", item_id, " OAI ", oai_base)
         super().__init__(item_id, oai_base, lang, plugin)
         # TO REDEFINE - WHICH IS YOUR PID TYPE?
         self.id_type = "internal"
@@ -82,24 +80,20 @@ class Plugin(Evaluator):
 
     def get_metadata(self):
         metadata_sample = []
-        eml_schema = "eucaim"
-        final_url = self.oai_base + "/resources/details/" + self.item_id
-
+        eml_schema = "http://www.w3.org/ns/dcat#Dataset" 
+        # "http://fdp3.healthdataportal.eu/metadata-schemas/866d7fb8-5982-4215-9c7c-18d0ed1bd5f3"
         error_in_metadata = False
-        headers = {
-            "accept": "application/json",
-        }
-
+      
         # create a client with base URL
         client = Client('http://fdp3.healthdataportal.eu')
-        # read metadata, return a RDF graph
-        r = client.read_dataset('ec1121de-5d99-4c81-92fb-273419b50386')
+        # Read metadata, return a RDF graph
+        # r = client.read_dataset('ec1121de-5d99-4c81-92fb-273419b50386')
+        r = client.read_dataset(self.item_id)
         fdp_json = r.serialize(format="json-ld")
-        print(fdp_json)
+        # print(fdp_json)
         if not fdp_json:
             msg = (
-                "Error: empty metadata received from FDP: %s"
-                % final_url
+                "Error: empty metadata received from FDP"
             )
             error_in_metadata = True
         if error_in_metadata:
@@ -107,10 +101,11 @@ class Plugin(Evaluator):
             raise Exception(msg)
 
         for s, p, o in r:
-            print("Subject:", s)
-            print("Predicate:", p)
-            print("Object:", o)
-            metadata_sample.append([eml_schema, s, p, o])
+            # print("Subject:", s)
+            # print("Predicate:", p)
+            #print("Object:", o)
+            metadata_sample.append([eml_schema, p, o, 'eucaim'])
+        # print(metadata_sample)
         return metadata_sample
 
     @ConfigTerms(term_id="identifier_term")
@@ -138,10 +133,13 @@ class Plugin(Evaluator):
         msg
             Message with the results or recommendations to improve this indicator
         """
+        print("EUCAIM evaluator F1 01M ", kwargs)
         term_data = kwargs["identifier_term"]
         term_metadata = term_data["metadata"]
+        print("EUCAIM_ Identifier term ", term_data, " metadata term ", term_metadata)
 
         id_list = term_metadata.text_value.values
+        print("EUCAIMS ID list ", id_list)
 
         points, msg_list = self.eval_persistency(id_list, data_or_metadata="metadata")
         logger.debug(msg_list)

@@ -125,7 +125,7 @@ class Evaluator(object):
             identifier from the repo)
 
     oai_base : str
-        Open Archives initiative , This is the place in which the API will ask for the metadata
+        Open Archives initiative, this is the place in which the API will ask for the metadata
 
     lang : Language
     """
@@ -2125,6 +2125,7 @@ class ConfigTerms(property):
             has_metadata = True
 
             term_list = ast.literal_eval(plugin.config[plugin.name][self.term_id])
+            print("Evaluator term list ", term_list)
             # Get values in config for the given term
             if not term_list:
                 msg = (
@@ -2140,6 +2141,8 @@ class ConfigTerms(property):
                 term_metadata = ut.check_metadata_terms_with_values(
                     metadata, term_metadata
                 )
+                print("Update")
+                print(term_metadata)
                 if term_metadata.empty:
                     msg = (
                         "No access information can be found in the metadata for: %s. Please double-check the value/s provided for '%s' configuration parameter"

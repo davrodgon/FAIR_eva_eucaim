@@ -405,16 +405,24 @@ def check_metadata_terms_with_values(metadata, terms):
     -------
     DataFrame with the matching elements found in the metadata.
     """
+    print("Metadata: ", metadata)
+    print("Terms: ", terms)
+    #for row in metadata:
+    #        print(metadata["element"])
     term_dfs = []
     for index, row in terms.iterrows():
         _element = row["element"]
+        print("Element: ", _element)
         _qualifier = row["qualifier"]
+        print("Qualifier: ", _qualifier)
+        
         # Select matching metadata row
         _df = metadata.loc[
             (metadata["element"] == _element)
             & (metadata["qualifier"].apply(lambda x: x in [None, _qualifier]))
             & (metadata["text_value"] != "")
         ]
+        _df = metadata.loc[11]
         if _df.empty:
             logging.warning(
                 "Element (and qualifier) not found in metadata: %s (qualifier: %s)"
