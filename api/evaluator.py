@@ -777,6 +777,8 @@ class Evaluator(object):
 
         # 2 - Look for the metadata terms in HTML in order to know if they can be accessed manually
         try:
+            print("RDA A1 02M: item ID ", self.item_id)
+            print(idutils.detect_identifier_schemes(self.item_id))
             item_id_http = idutils.to_url(
                 self.item_id,
                 idutils.detect_identifier_schemes(self.item_id)[0],

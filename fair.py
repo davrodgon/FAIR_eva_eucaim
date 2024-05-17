@@ -11,7 +11,7 @@ from connexion.resolver import RestyResolver
 
 logging.basicConfig(
     stream=sys.stdout,
-    level=logging.CRITICAL,
+    level=logging.DEBUG,
     format="%(levelname)s:'%(name)s:%(lineno)s' | %(message)s",
 )
 

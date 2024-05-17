@@ -550,6 +550,7 @@ def find_dataset_file(metadata, url, data_formats):
 
 
 def metadata_human_accessibility(metadata, url):
+    print("Metadata human access ", url)
     msg = "Searching metadata terms in %s | \n" % url
     not_found = ""
     points = 0
@@ -559,7 +560,7 @@ def metadata_human_accessibility(metadata, url):
     response = requests.get(url, headers=headers, verify=False, allow_redirects=True)
     msg = msg + "Request to repo code: %i | \n" % response.status_code
     found_items = 0
-    logging.debug("TEST A102M: Metadata: %s" % metadata)
+    #logging.debug("TEST A102M: Metadata: %s" % metadata)
     for index, text in metadata.iterrows():
         if (text["text_value"] is not None and text["text_value"] in response.text) or (
             "%s.%s" % (text["element"], text["qualifier"]) in response.text

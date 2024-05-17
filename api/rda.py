@@ -12,7 +12,7 @@ from api.evaluator import Evaluator
 from fair import app_dirname, load_config
 
 logging.basicConfig(
-    stream=sys.stdout, level=logging.CRITICAL, format="'%(name)s:%(lineno)s' | %(message)s"
+    stream=sys.stdout, level=logging.DEBUG, format="'%(name)s:%(lineno)s' | %(message)s"
 )
 logger = logging.getLogger(os.path.basename(__file__))
 

@@ -2,16 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import ast
-import json
 import logging
 import os
 import sys
-import api.utils as ut
 import pandas as pd
 from api.evaluator import ConfigTerms, Evaluator
-from fdpclient import operations
 from fdpclient.client import Client
-import rdflib
+
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.DEBUG, format="'%(name)s:%(lineno)s' | %(message)s"
@@ -37,13 +34,17 @@ class Plugin(Evaluator):
 
     def __init__(self, item_id, oai_base=None, lang="en"):
         plugin = "eucaim"
-        print("EUCAIM plugin: Identifier ", item_id, " OAI ", oai_base)
         super().__init__(item_id, oai_base, lang, plugin)
         # TO REDEFINE - WHICH IS YOUR PID TYPE?
         self.id_type = "internal"
 
         global _
         _ = super().translation()
+
+        self.base_url = ast.literal_eval(self.config[plugin]["base_url"])
+        print(self.base_url)
+        # self.oai_base = ast.literal_eval(self.config[plugin]["oai_base"])
+        # print(self.oai_base)
 
         # You need a way to get your metadata in a similar format
         metadata_sample = self.get_metadata()
@@ -52,7 +53,7 @@ class Plugin(Evaluator):
             columns=["metadata_schema", "element", "text_value", "qualifier"],
         )
 
-        logger.debug("METADATA: %s" % (self.metadata))
+        # logger.debug("METADATA: %s" % (self.metadata))
         # Protocol for (meta)data accessing
         if len(self.metadata) > 0:
             self.access_protocols = ["http"]
@@ -81,20 +82,15 @@ class Plugin(Evaluator):
 
     def get_metadata(self):
         metadata_sample = []
-        eml_schema = "http://www.w3.org/ns/dcat#Dataset" 
-        
-        error_in_metadata = False
-      
+        dataset_schema = "http://www.w3.org/ns/dcat#Dataset"
         # create a client with base URL
-        client = Client('http://fdp3.healthdataportal.eu')
+        client = Client(self.base_url)
         # Read metadata, return a RDF graph
         r = client.read_dataset(self.item_id)
-   
         for s, p, o in r:
             p = str(p)
             o = str(o)
-            metadata_sample.append([eml_schema, p, o, 'eucaim'])
-        
+            metadata_sample.append([dataset_schema, p, o, 'eucaim'])
         return metadata_sample
 
     @ConfigTerms(term_id="identifier_term")
@@ -217,7 +213,7 @@ class Plugin(Evaluator):
         # TO REDEFINE
         points = 0
         msg = _(
-            "Currently, this repo does not include community-bsed schemas. If you need to include yours, please contact."
+            "Currently, this repo does not include community-based schemas. If you need to include yours, please contact."
         )
         return (points, msg)
 
@@ -242,6 +238,6 @@ class Plugin(Evaluator):
         # TO REDEFINE
         points = 0
         msg = _(
-            "Currently, this repo does not include community-bsed schemas. If you need to include yours, please contact."
+            "Currently, this repo does not include community-based schemas. If you need to include yours, please contact."
         )
         return (points, msg)
