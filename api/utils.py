@@ -393,58 +393,6 @@ def is_unique_id(item_id):
     return is_unique
 
 
-def check_metadata_terms_with_values2(metadata, terms):
-    """Checks if provided terms are found in the metadata.
-
-    Parameters
-    ----------
-    metadata: pd.DataFrame with metadata from repository
-    terms: pd.DataFrame with terms to search in the metadata
-
-    Returns
-    -------
-    DataFrame with the matching elements found in the metadata.
-    """
-    print("Metadata: ", metadata)
-    print("Terms: ", terms)
-    term_dfs = []
-    for index, row in terms.iterrows():
-        _element = row["element"]
-        print("Element: ", _element)
-        _qualifier = row["qualifier"]
-        print("Qualifier: ", _qualifier)
-        
-        # Select matching metadata row
-        my_df = metadata.loc[metadata["element"] == _element]
-        print("My DF ", my_df)
-        print(metadata["element"])
-        _df = metadata.loc[
-            (metadata["element"] == _element)
-            & (metadata["qualifier"].apply(lambda x: x in [None, _qualifier]))
-            & (metadata["text_value"] != "")
-        ]
-        
-        if _df.empty:
-            logging.warning(
-                "Element (and qualifier) not found in metadata: %s (qualifier: %s)"
-                % (_element, _qualifier)
-            )
-        else:
-            term_dfs.append(_df)
-            logging.debug(
-                "Found matching <%s> element in metadata: %s"
-                % (_element, _df.to_json())
-            )
-    df_access = pd.DataFrame()
-    if term_dfs:
-        df_access = pd.concat(term_dfs)
-        logging.debug(
-            "DataFrame produced with matching metadata elements: \n%s" % df_access
-        )
-
-    return df_access
-
-
 def oai_check_record_url(oai_base, metadata_prefix, pid):
     endpoint_root = urllib.parse.urlparse(oai_base).netloc
     try:
