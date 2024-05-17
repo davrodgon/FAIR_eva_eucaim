@@ -45,7 +45,7 @@ def get_orcid_str(orcid_str):
 
 def check_doi(doi):
     url = "http://dx.doi.org/%s" % str(doi)  # DOI solver URL
-    # Type of response accpeted
+    # Type of response accepted
     headers = {"Accept": "application/vnd.citationstyles.csl+json;q=1.0"}
     r = requests.post(url, headers=headers)  # POST with headers
     if r.status_code == 200:
@@ -407,8 +407,6 @@ def check_metadata_terms_with_values(metadata, terms):
     """
     print("Metadata: ", metadata)
     print("Terms: ", terms)
-    #for row in metadata:
-    #        print(metadata["element"])
     term_dfs = []
     for index, row in terms.iterrows():
         _element = row["element"]
@@ -417,12 +415,15 @@ def check_metadata_terms_with_values(metadata, terms):
         print("Qualifier: ", _qualifier)
         
         # Select matching metadata row
+        my_df = metadata.loc[metadata["element"] == _element]
+        print("My DF ", my_df)
+        print(metadata["element"])
         _df = metadata.loc[
             (metadata["element"] == _element)
             & (metadata["qualifier"].apply(lambda x: x in [None, _qualifier]))
             & (metadata["text_value"] != "")
         ]
-        _df = metadata.loc[11]
+        
         if _df.empty:
             logging.warning(
                 "Element (and qualifier) not found in metadata: %s (qualifier: %s)"

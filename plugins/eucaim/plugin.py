@@ -11,6 +11,7 @@ import pandas as pd
 from api.evaluator import ConfigTerms, Evaluator
 from fdpclient import operations
 from fdpclient.client import Client
+import rdflib
 
 logging.basicConfig(
     stream=sys.stdout, level=logging.DEBUG, format="'%(name)s:%(lineno)s' | %(message)s"
@@ -81,29 +82,29 @@ class Plugin(Evaluator):
     def get_metadata(self):
         metadata_sample = []
         eml_schema = "http://www.w3.org/ns/dcat#Dataset" 
-        # "http://fdp3.healthdataportal.eu/metadata-schemas/866d7fb8-5982-4215-9c7c-18d0ed1bd5f3"
+        
         error_in_metadata = False
       
         # create a client with base URL
         client = Client('http://fdp3.healthdataportal.eu')
         # Read metadata, return a RDF graph
-        # r = client.read_dataset('ec1121de-5d99-4c81-92fb-273419b50386')
         r = client.read_dataset(self.item_id)
-        fdp_json = r.serialize(format="json-ld")
+        #fdp_json = r.serialize(format="json-ld")
         # print(fdp_json)
-        if not fdp_json:
+        """ if not fdp_json:
             msg = (
                 "Error: empty metadata received from FDP"
             )
             error_in_metadata = True
         if error_in_metadata:
             logger.error(msg)
-            raise Exception(msg)
+            raise Exception(msg) """
 
         for s, p, o in r:
-            # print("Subject:", s)
-            # print("Predicate:", p)
-            #print("Object:", o)
+            print("Subject:", type(rdflib.term.URIRef(s).toPython))
+            p = str(p)
+            print("Predicate:", type(p))
+            print("Object:", type(o))
             metadata_sample.append([eml_schema, p, o, 'eucaim'])
         # print(metadata_sample)
         return metadata_sample
@@ -128,7 +129,7 @@ class Plugin(Evaluator):
         Returns
         -------
         points
-            - 0/100   if no persistent identifier is used  for the metadata
+            - 0/100   if no persistent identifier is used  for the metadata
             - 100/100 if a persistent identifier is used for the metadata
         msg
             Message with the results or recommendations to improve this indicator
