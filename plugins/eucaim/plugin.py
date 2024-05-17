@@ -89,24 +89,12 @@ class Plugin(Evaluator):
         client = Client('http://fdp3.healthdataportal.eu')
         # Read metadata, return a RDF graph
         r = client.read_dataset(self.item_id)
-        #fdp_json = r.serialize(format="json-ld")
-        # print(fdp_json)
-        """ if not fdp_json:
-            msg = (
-                "Error: empty metadata received from FDP"
-            )
-            error_in_metadata = True
-        if error_in_metadata:
-            logger.error(msg)
-            raise Exception(msg) """
-
+   
         for s, p, o in r:
-            print("Subject:", type(rdflib.term.URIRef(s).toPython))
             p = str(p)
-            print("Predicate:", type(p))
-            print("Object:", type(o))
+            o = str(o)
             metadata_sample.append([eml_schema, p, o, 'eucaim'])
-        # print(metadata_sample)
+        
         return metadata_sample
 
     @ConfigTerms(term_id="identifier_term")

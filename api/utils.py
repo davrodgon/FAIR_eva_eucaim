@@ -393,7 +393,7 @@ def is_unique_id(item_id):
     return is_unique
 
 
-def check_metadata_terms_with_values(metadata, terms):
+def check_metadata_terms_with_values2(metadata, terms):
     """Checks if provided terms are found in the metadata.
 
     Parameters
