@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import os
 import sys
@@ -90,11 +91,15 @@ def merge_pdf(pdf1, pdf2, name_file):
     nombre_archivo_salida = name_file
     fusionador = PdfFileMerger()
 
-    for pdf in pdfs:
-        fusionador.append(open(pdf, "rb"))
+    # Make sure file handles are closed.
+    with contextlib.ExitStack() as stack:
+        for pdf in pdfs:
+            f = stack.enter_context(open(pdf, "rb"))
+            fusionador.append(f)
 
-    with open(nombre_archivo_salida, "wb") as salida:
-        fusionador.write(salida)
+        with open(nombre_archivo_salida, "wb") as salida:
+            fusionador.write(salida)
+        fusionador.close()
 
 
 def bar_FAIR(data):

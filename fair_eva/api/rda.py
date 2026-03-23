@@ -94,47 +94,50 @@ def load_plugin(wrapped_func):
         evaluator_handler = ut.EvaluatorLogHandler()
         downstream_logger.addHandler(evaluator_handler)
 
-        # Load configuration
-        config_data = plugin_module.Plugin.load_config(f"{PLUGIN_PATH}.{plugin_name}")
+        try:
+            # Load configuration
+            config_data = plugin_module.Plugin.load_config(f"{PLUGIN_PATH}.{plugin_name}")
 
-        # Collect FAIR checks per metadata identifier
-        result = {}
-        exit_code = 200
-        for item_id in ids:
-            eva = None
-            try:
-                eva = plugin_module.Plugin(
-                    item_id, api_endpoint, lang, name=plugin_name, config=config_data
-                )
-            except Exception as e:
-                message = f"Error while initiating {plugin_name} plugin: {e}"
-                logger.error(message)
-                return message, 400
+            # Collect FAIR checks per metadata identifier
+            result = {}
+            exit_code = 200
+            for item_id in ids:
+                eva = None
+                try:
+                    eva = plugin_module.Plugin(
+                        item_id, api_endpoint, lang, name=plugin_name, config=config_data
+                    )
+                except Exception as e:
+                    message = f"Error while initiating {plugin_name} plugin: {e}"
+                    logger.error(message)
+                    return message, 400
 
-            try:
-                _result, _exit_code = wrapped_func(body, eva=eva)
-                logger.debug(
-                    "Raw result returned for indicator ID '%s': %s" % (item_id, _result)
-                )
-                result[item_id] = _result
-                if _exit_code != 200:
-                    exit_code = _exit_code
-            finally:
-                if eva is not None:
-                    try:
-                        if hasattr(eva, "close") and callable(eva.close):
-                            eva.close()
-                    except Exception as e:
-                        logger.warning(
-                            "Error while closing evaluator for %s: %s" % (item_id, e)
-                        )
-                    del eva
+                try:
+                    _result, _exit_code = wrapped_func(body, eva=eva)
+                    logger.debug(
+                        "Raw result returned for indicator ID '%s': %s" % (item_id, _result)
+                    )
+                    result[item_id] = _result
+                    if _exit_code != 200:
+                        exit_code = _exit_code
+                finally:
+                    if eva is not None:
+                        try:
+                            if hasattr(eva, "close") and callable(eva.close):
+                                eva.close()
+                        except Exception as e:
+                            logger.warning(
+                                "Error while closing evaluator for %s: %s" % (item_id, e)
+                            )
+                        del eva
 
-        # Append evaluator logs to the final results
-        result["evaluator_logs"] = evaluator_handler.logs
-        logger.debug("Evaluator logs appended through 'evaluator_logs' property")
+            # Append evaluator logs to the final results
+            result["evaluator_logs"] = evaluator_handler.logs
+            logger.debug("Evaluator logs appended through 'evaluator_logs' property")
 
-        return result, exit_code
+            return result, exit_code
+        finally:
+            downstream_logger.removeHandler(evaluator_handler)
 
     return wrapper
 

@@ -290,7 +290,7 @@ def evaluator():
             )
             logging.debug(app.config["BABEL_TRANSLATION_DIRECTORIES"])
             babel.init_app(app, locale_selector=get_locale)
-        url = "http://localhost:9090/v1.0/rda/rda_all"
+        url = "http://localhost:9090/v1.0/rda/rda_all" # hardcoded
         result = requests.post(
             url, data=body, headers={"Content-Type": "application/json"}
         )
