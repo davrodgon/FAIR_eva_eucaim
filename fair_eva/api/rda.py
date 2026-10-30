@@ -167,8 +167,8 @@ def rda_f1_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -195,8 +195,8 @@ def rda_f1_01d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -223,8 +223,8 @@ def rda_f1_02m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -251,8 +251,8 @@ def rda_f1_02d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -279,8 +279,8 @@ def rda_f2_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -307,8 +307,8 @@ def rda_f3_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -335,8 +335,8 @@ def rda_f4_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -363,8 +363,8 @@ def rda_a1_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -391,8 +391,8 @@ def rda_a1_02m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -419,8 +419,8 @@ def rda_a1_02d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -447,8 +447,8 @@ def rda_a1_03m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -475,8 +475,8 @@ def rda_a1_03d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -503,8 +503,8 @@ def rda_a1_04m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -531,8 +531,8 @@ def rda_a1_04d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -559,8 +559,8 @@ def rda_a1_05d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -587,8 +587,8 @@ def rda_a1_1_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -615,8 +615,8 @@ def rda_a1_1_01d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -643,8 +643,8 @@ def rda_a1_2_01d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -671,8 +671,8 @@ def rda_a2_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -699,8 +699,8 @@ def rda_i1_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -727,8 +727,8 @@ def rda_i1_01d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -755,8 +755,8 @@ def rda_i1_02m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -783,8 +783,8 @@ def rda_i1_02d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -811,8 +811,8 @@ def rda_i2_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -839,8 +839,8 @@ def rda_i2_01d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -867,8 +867,8 @@ def rda_i3_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -895,8 +895,8 @@ def rda_i3_01d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -923,8 +923,8 @@ def rda_i3_02m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -951,8 +951,8 @@ def rda_i3_02d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -979,8 +979,8 @@ def rda_i3_03m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -1007,8 +1007,8 @@ def rda_i3_04m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -1035,8 +1035,8 @@ def rda_r1_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -1063,8 +1063,8 @@ def rda_r1_1_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -1091,8 +1091,8 @@ def rda_r1_1_02m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -1119,8 +1119,8 @@ def rda_r1_1_03m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -1147,8 +1147,8 @@ def rda_r1_2_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -1175,8 +1175,8 @@ def rda_r1_2_02m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -1203,8 +1203,8 @@ def rda_r1_3_01m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -1231,8 +1231,8 @@ def rda_r1_3_01d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -1259,8 +1259,8 @@ def rda_r1_3_02m(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -1287,8 +1287,8 @@ def rda_r1_3_02d(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -1315,8 +1315,8 @@ def data_01(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 
@@ -1343,8 +1343,8 @@ def data_02(body, eva):
             "msg": "Exception: %s" % e,
             "points": 0,
             "color": ut.get_color(0),
-            "test_status": ut.test_status(points),
-            "score": {"earned": points, "total": 100},
+            "test_status": ut.test_status(0),
+            "score": {"earned": 0, "total": 100},
         }
         exit_code = 422
 

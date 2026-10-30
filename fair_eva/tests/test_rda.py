@@ -124,15 +124,16 @@ def test_identifier_indicators_pass_with_persistent_id(client, indicator):
     assert response.json()[PID]["points"] == 100
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="rda.py error handlers reference 'points', which is unbound when the "
-    "indicator raises: the API answers 500 instead of 422",
-)
-def test_indicator_failure_returns_422(client):
-    # rda_a1_02m resolves the PID over the network, which is disabled in tests
+@pytest.mark.parametrize("indicator", ["rda_a1_02m", "rda_r1_3_02m"])
+def test_indicator_failure_returns_422(client, indicator):
+    # These indicators resolve the PID over the network, which is disabled in tests
     response = client.post(
-        "/v1.0/rda/rda_a1_02m",
+        "/v1.0/rda/%s" % indicator,
         json={"repo": PLUGIN, "id": PID, "api_endpoint": "http://x"},
     )
     assert response.status_code == 422
+    result = response.json()[PID]
+    assert result["name"] == "ERROR"
+    assert result["points"] == 0
+    assert result["test_status"] == "fail"
+    assert result["score"] == {"earned": 0, "total": 100}
