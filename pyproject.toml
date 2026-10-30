@@ -32,6 +32,12 @@ dependencies = [
     "Babel",
     "flask_babel",
     "reportlab",
+    # imported by fair_eva/web.py, fair_eva/utils/*.py
+    "bokeh",
+    "numpy",
+    "rdflib",
+    "requests",
+    "PyPDF2",
 ]
 
 [project.scripts]
@@ -62,6 +68,6 @@ omit = ["fair_eva/tests/*", "fair_eva/plugins.old/*"]
 
 [tool.coverage.report]
 # Floor measured at introduction; raise it as coverage grows
-fail_under = 30
+fail_under = 40
 show_missing = true
 skip_covered = true
