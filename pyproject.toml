@@ -52,3 +52,16 @@ in-place = true
 
 [tool.isort]
 profile = "black"
+
+[tool.pytest.ini_options]
+testpaths = ["fair_eva/tests"]
+
+[tool.coverage.run]
+source = ["fair_eva"]
+omit = ["fair_eva/tests/*", "fair_eva/plugins.old/*"]
+
+[tool.coverage.report]
+# Floor measured at introduction; raise it as coverage grows
+fail_under = 30
+show_missing = true
+skip_covered = true

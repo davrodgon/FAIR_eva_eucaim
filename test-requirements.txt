@@ -2,3 +2,5 @@ black
 pre-commit
 docformatter
 isort
+pytest
+pytest-cov
