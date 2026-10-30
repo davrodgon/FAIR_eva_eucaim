@@ -52,3 +52,6 @@ in-place = true
 
 [tool.isort]
 profile = "black"
+
+[tool.pytest.ini_options]
+testpaths = ["fair_eva/tests"]
