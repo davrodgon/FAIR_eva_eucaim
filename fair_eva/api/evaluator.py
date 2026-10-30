@@ -214,6 +214,31 @@ class EvaluatorBase(ABC):
         """Method to be implemented by plugins."""
         raise NotImplementedError("Derived class mus implement get_metadata method")
 
+    # ---- BEGIN optional SHACL validation support (see docs/shacl_validation.md) ----
+    def get_rdf_graph(self):
+        """Optional hook: return the item's RDF as an ``rdflib.Graph`` (or None).
+
+        Plugins that validate with SHACL override it; ``validate_shacl`` uses it
+        when no graph is passed explicitly.
+        """
+        return None
+
+    def validate_shacl(self, data_graph=None, shape_sets=None, **kwargs):
+        """Validate RDF against the SHACL shape sets configured for this plugin.
+
+        Returns a ``fair_eva.shacl.ShaclReport`` (conformance, results and the
+        name/version/SHA-256 of every shapes document used) or raises
+        ``fair_eva.shacl.ShaclError``.  Extra keyword arguments are those of
+        ``fair_eva.shacl.validate_for_plugin``.
+        """
+        from fair_eva.shacl import validate_for_plugin
+
+        return validate_for_plugin(
+            self, data_graph=data_graph, shape_sets=shape_sets, **kwargs
+        )
+
+    # ---- END optional SHACL validation support ----
+
     def eval_uniqueness(self, id_list, data_or_metadata="(meta)data"):
         points = 0
         msg_list = []
