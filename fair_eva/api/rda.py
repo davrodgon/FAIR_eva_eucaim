@@ -1359,7 +1359,6 @@ def rda_all(body, eva):
     reusable = {}
     data_test = {}
     error = {}
-    x_principle = ""
     result_points = 10
     num_of_tests = 10
 
@@ -1379,182 +1378,60 @@ def rda_all(body, eva):
         logger.debug("Returning API response: %s" % error)
         return error, 500
 
-    for e in documents["paths"]:
+    indicator_groups = {
+        "Findable": findable,
+        "Accessible": accessible,
+        "Interoperable": interoperable,
+        "Reusable": reusable,
+    }
+    for path, spec in documents["paths"].items():
+        if spec.get("x-indicator"):
+            groups = indicator_groups
+        elif spec.get("x-data_test"):
+            groups = {"Data": data_test}
+        else:
+            continue  # not a test (e.g. /rda/rda_all or /endpoints)
+        indi_code = path.split("/")[-1]
+        x_principle = spec.get("x-principle", "")
+        group = next(
+            (group for name, group in groups.items() if name in x_principle), None
+        )
+        if group is None:
+            logger.warning(
+                "Unknown principle <%s> for test %s: skipping"
+                % (x_principle, indi_code)
+            )
+            continue
+
+        name = indi_code
         try:
-            if documents["paths"][e]["x-indicator"]:
-                indi_code = e.split("/")
-                indi_code = indi_code[len(indi_code) - 1]
-                logger.debug("Running - %s" % indi_code)
-                points, msg = getattr(eva, indi_code)()
-                x_principle = documents["paths"][e]["x-principle"]
-                if "Findable" in x_principle:
-                    findable.update(
-                        {
-                            indi_code: {
-                                "name": indi_code,
-                                "msg": msg,
-                                "points": points,
-                                "color": ut.get_color(points),
-                                "test_status": ut.test_status(points),
-                                "score": {
-                                    "earned": points,
-                                    "total": 100,
-                                    "weight": documents["paths"][e]["x-level"],
-                                },
-                            }
-                        }
-                    )
-                elif "Accessible" in x_principle:
-                    accessible.update(
-                        {
-                            indi_code: {
-                                "name": indi_code,
-                                "msg": msg,
-                                "points": points,
-                                "color": ut.get_color(points),
-                                "test_status": ut.test_status(points),
-                                "score": {
-                                    "earned": points,
-                                    "total": 100,
-                                    "weight": documents["paths"][e]["x-level"],
-                                },
-                            }
-                        }
-                    )
-                elif "Interoperable" in x_principle:
-                    interoperable.update(
-                        {
-                            indi_code: {
-                                "name": indi_code,
-                                "msg": msg,
-                                "points": points,
-                                "color": ut.get_color(points),
-                                "test_status": ut.test_status(points),
-                                "score": {
-                                    "earned": points,
-                                    "total": 100,
-                                    "weight": documents["paths"][e]["x-level"],
-                                },
-                            }
-                        }
-                    )
-                elif "Reusable" in x_principle:
-                    reusable.update(
-                        {
-                            indi_code: {
-                                "name": indi_code,
-                                "msg": msg,
-                                "points": points,
-                                "color": ut.get_color(points),
-                                "test_status": ut.test_status(points),
-                                "score": {
-                                    "earned": points,
-                                    "total": 100,
-                                    "weight": documents["paths"][e]["x-level"],
-                                },
-                            }
-                        }
-                    )
-            elif documents["paths"][e]["x-data_test"]:
-                try:
-                    indi_code = e.split("/")
-                    indi_code = indi_code[len(indi_code) - 1]
-                    logger.debug("Running Data test - %s" % indi_code)
-                    points, msg = getattr(eva, indi_code)()
-                    x_principle = documents["paths"][e]["x-principle"]
-                    if "Data" in x_principle:
-                        data_test.update(
-                            {
-                                indi_code: {
-                                    "name": indi_code,
-                                    "msg": msg,
-                                    "points": points,
-                                    "color": ut.get_color(points),
-                                    "test_status": ut.test_status(points),
-                                    "score": {
-                                        "earned": points,
-                                        "total": 100,
-                                        "weight": documents["paths"][e]["x-level"],
-                                    },
-                                }
-                            }
-                        )
-                except Exception as e:
-                    logger.error(
-                        "Problem in data test - %s | Probably this test does not exist for this plugin"
-                        % x_principle
-                    )
-        except Exception as e:
-            logger.error("Problem in test - %s" % x_principle)
-            if "Findable" in x_principle:
-                findable.update(
-                    {
-                        indi_code: {
-                            "name": "[ERROR] - %s" % indi_code,
-                            "msg": "Exception: %s" % e,
-                            "points": points,
-                            "color": ut.get_color(points),
-                            "test_status": ut.test_status(points),
-                            "score": {
-                                "earned": points,
-                                "total": 100,
-                                "weight": documents["paths"][e]["x-level"],
-                            },
-                        }
-                    }
+            logger.debug("Running - %s" % indi_code)
+            points, msg = getattr(eva, indi_code)()
+        except Exception as exc:
+            if groups is not indicator_groups:
+                logger.error(
+                    "Problem in data test - %s | Probably this test does not exist "
+                    "for this plugin: %s" % (indi_code, exc)
                 )
-            elif "Accessible" in x_principle:
-                accessible.update(
-                    {
-                        indi_code: {
-                            "name": "[ERROR] - %s" % indi_code,
-                            "msg": "Exception: %s" % e,
-                            "points": points,
-                            "color": ut.get_color(points),
-                            "test_status": ut.test_status(points),
-                            "score": {
-                                "earned": points,
-                                "total": 100,
-                                "weight": documents["paths"][e]["x-level"],
-                            },
-                        }
-                    }
-                )
-            elif "Interoperable" in x_principle:
-                interoperable.update(
-                    {
-                        indi_code: {
-                            "name": "[ERROR] - %s" % indi_code,
-                            "msg": "Exception: %s" % e,
-                            "points": points,
-                            "color": ut.get_color(points),
-                            "test_status": ut.test_status(points),
-                            "score": {
-                                "earned": points,
-                                "total": 100,
-                                "weight": documents["paths"][e]["x-level"],
-                            },
-                        }
-                    }
-                )
-            elif "Reusable" in x_principle:
-                reusable.update(
-                    {
-                        indi_code: {
-                            "name": "[ERROR] - %s" % indi_code,
-                            "msg": "Exception: %s" % e,
-                            "points": points,
-                            "color": ut.get_color(points),
-                            "test_status": ut.test_status(points),
-                            "score": {
-                                "earned": points,
-                                "total": 100,
-                                "weight": documents["paths"][e]["x-level"],
-                            },
-                        }
-                    }
-                )
-            logger.error(e)
+                continue
+            logger.error(
+                "Problem in test - %s (%s): %s" % (indi_code, x_principle, exc)
+            )
+            name = "[ERROR] - %s" % indi_code
+            msg = "Exception: %s" % exc
+            points = 0
+        group[indi_code] = {
+            "name": name,
+            "msg": msg,
+            "points": points,
+            "color": ut.get_color(points),
+            "test_status": ut.test_status(points),
+            "score": {
+                "earned": points,
+                "total": 100,
+                "weight": spec.get("x-level"),
+            },
+        }
 
     if len(data_test) > 0:
         result = {
