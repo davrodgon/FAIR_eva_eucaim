@@ -62,7 +62,21 @@ options_cli = set_parser()
 config = configparser.ConfigParser()
 config.read(options_cli.config_file)
 
-app = Flask(__name__)
+# Templates and static files live at the root of the repository
+ROOT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+app = Flask(
+    __name__,
+    template_folder=os.path.join(ROOT_PATH, "templates"),
+    static_folder=os.path.join(ROOT_PATH, "static"),
+)
+# Sessions need a secret key: take it from the environment or the configuration
+# and, as a last resort, generate a random one (sessions then do not survive
+# restarts nor are shared between workers).
+app.secret_key = (
+    os.environ.get("SECRET_KEY")
+    or config.get("local", "secret_key", fallback=None)
+    or os.urandom(24).hex()
+)
 app.config.update(
     {
         "TESTING": True,
@@ -121,6 +135,11 @@ def lang_in_session():
     )
 
 
+def base_lang(lang):
+    """Language of the available pages for a locale (en-GB -> en)."""
+    return lang.split("-")[0]
+
+
 def fallback_lang():
     best_match = request.accept_languages.best_match(app.config["BABEL_LOCALES"])
 
@@ -136,32 +155,28 @@ def fallback_lang():
 @app.route("/", defaults={"path": ""}, methods=["GET", "POST"])
 @app.route("/<path:path>", methods=["GET", "POST"])
 def catch_all(path):
+    language = base_lang(g.language)
     if path == "":
-        return redirect(url_for("home_" + g.language))
+        return redirect(url_for("home_" + language))
     subpaths = path.split("/")
     if len(subpaths) > 2:
         subpaths.pop(0)
     if subpaths[0] in app.config["BABEL_LOCALES"]:
+        # Variants (e.g. en-GB) are served by the pages of their base language
+        language = base_lang(subpaths[0])
         if len(subpaths) > 1:
             if subpaths[1] in app.config["PATHS"]:
-                return redirect(
-                    url_for(subpaths[1] + "_" + subpaths[0], **request.args)
-                )
+                return redirect(url_for(subpaths[1] + "_" + language, **request.args))
             else:
-                return redirect(url_for("not-found_" + subpaths[0]))
+                return redirect(url_for("not-found_" + language))
         else:
-            return redirect(url_for("home_" + subpaths[0]))
+            return redirect(url_for("home_" + language))
     else:
         if subpaths[0] in app.config["PATHS"]:
-            return redirect(url_for(subpaths[0] + "_" + g.language, **request.args))
-        else:
-            if len(subpaths) > 1:
-                if subpaths[1] in app.config["PATHS"]:
-                    return redirect(
-                        url_for(subpaths[1] + "_" + g.language, **request.args)
-                    )
-            else:
-                return redirect(url_for("not-found_" + g.language))
+            return redirect(url_for(subpaths[0] + "_" + language, **request.args))
+        elif len(subpaths) > 1 and subpaths[1] in app.config["PATHS"]:
+            return redirect(url_for(subpaths[1] + "_" + language, **request.args))
+        return redirect(url_for("not-found_" + language))
 
 
 @app.route("/es", endpoint="home_es")
@@ -214,7 +229,7 @@ def evaluator():
     try:
         args = request.args
         oai_base = None
-        item_id = args["item_id"]
+        item_id = args.get("item_id")
         logger.debug("ARGS_evaluator: %s" % args)
         sp = Smart_plugin(config["Repositories"])
         if item_id is None or item_id == "":
@@ -406,7 +421,9 @@ def export_pdf():
     try:
         args = request.args
         oai_base = None
-        item_id = args["item_id"]
+        item_id = args.get("item_id")
+        if not item_id:
+            return "Missing parameter: item_id", 400
         logger.debug("ARGS_evaluator: %s" % args)
         sp = Smart_plugin(config["Repositories"])
         if config["local"]["only_local"] == "True":
@@ -473,12 +490,15 @@ def export_pdf():
         )
         resultis = result.json()
         for key in resultis:
-            result = resultis[key]
+            if key != "evaluator_logs":
+                result = resultis[key]
         result_points = 0
         weight_of_tests = 0
         for key in result:
             g_weight = 0
             g_points = 0
+            if key == "data_test":
+                continue
             for kk in result[key]:
                 result[key][kk]["indicator"] = gettext(
                     "%s.indicator" % result[key][kk]["name"]
@@ -528,6 +548,7 @@ def export_pdf():
     except Exception as e:
         logger.error("Problem parsing API result")
         logger.error(e)
+        return "Problem generating the PDF report: %s" % e, 502
 
 
 def group_chart(result):
@@ -613,7 +634,7 @@ def fair_chart(data_block, fair_points):
     p = figure(
         x_range=types,
         title="FAIR global scores",
-        plot_height=250,
+        height=250,
         sizing_mode="scale_width",
     )
 
@@ -627,7 +648,6 @@ def fair_chart(data_block, fair_points):
         x_offset=-13.5,
         y_offset=0,
         source=source,
-        render_mode="canvas",
     )
 
     p.vbar(x="types", top="score", width=0.9, color="status", source=data)

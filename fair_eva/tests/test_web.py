@@ -57,10 +57,6 @@ def web(tmp_path_factory):
 
 @pytest.fixture
 def client(web, monkeypatch):
-    # web.py never sets a secret key nor finds the templates (see xfail tests below),
-    # so the fixture provides what a real deployment is expected to have.
-    monkeypatch.setattr(web.app, "template_folder", str(REPO_ROOT / "templates"))
-    monkeypatch.setattr(web.app, "static_folder", str(REPO_ROOT / "static"))
     monkeypatch.setattr(web.app, "secret_key", "test")
     return web.app.test_client()
 
@@ -296,21 +292,11 @@ def test_catch_all_extra_prefix_segment_is_dropped(client):
     assert response.headers["Location"] == "/en/evaluations"
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BUG: catch_all returns None (HTTP 500) for a two-segment path whose "
-    "first segment is not a language and whose second is not a known page",
-)
 def test_catch_all_unknown_two_segment_path(client):
     response = client.get("/foo/bar")
     assert response.status_code in (302, 404)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BUG: language variants listed in BABEL_LOCALES (en-GB, es-MX...) have no "
-    "routes/endpoints, so redirecting to their home or pages raises BuildError",
-)
 @pytest.mark.parametrize("path", ["/en-GB", "/en-GB/evaluations", "/en-GB/nope"])
 def test_catch_all_language_variants(client, path):
     response = client.get(path)
@@ -327,11 +313,6 @@ def test_evaluator_empty_item_id_shows_form(client, api):
     api.assert_not_called()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BUG: a request without item_id raises KeyError, which is swallowed and "
-    "later causes UnboundLocalError (HTTP 500) instead of showing the form",
-)
 def test_evaluator_missing_item_id_shows_form(client, api):
     response = client.get("/en/evaluator")
     assert response.status_code == 200
@@ -492,25 +473,8 @@ def test_evaluator_internal_id_success(client, api):
 def pdf(web, api, monkeypatch):
     create_pdf = mock.Mock(return_value=b"%PDF-1.4 fake")
     monkeypatch.setattr(web.pdf_gen, "create_pdf", create_pdf)
-    # export_pdf cannot cope with the "evaluator_logs" key the real API always adds
-    # (see test_export_pdf_with_real_api_payload), so the other tests omit it.
-    payload = make_api_result()
-    del payload["evaluator_logs"]
-    api.return_value = FakeResponse(payload)
-    return create_pdf
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="BUG: export_pdf takes the last key of the API answer as the results, but "
-    "the API always appends 'evaluator_logs' last (evaluator() skips it), so PDF "
-    "export always fails with the real API",
-)
-def test_export_pdf_with_real_api_payload(client, api, pdf):
     api.return_value = FakeResponse(make_api_result())  # includes evaluator_logs
-    response = client.get("/en/export_pdf?item_id=%s&repo=dummy" % DOI)
-    assert response.status_code == 200
-    assert response.mimetype == "application/pdf"
+    return create_pdf
 
 
 def test_export_pdf(client, api, pdf):
@@ -573,21 +537,11 @@ def test_export_pdf_check_url_error_is_tolerated(client, api, pdf, web):
     assert client.get("/en/export_pdf?item_id=%s&repo=dummy" % DOI).status_code == 200
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BUG: export_pdf without item_id swallows the KeyError and then returns "
-    "None (HTTP 500) instead of a 4xx answer",
-)
 def test_export_pdf_missing_item_id(client, api, pdf):
     response = client.get("/en/export_pdf")
     assert response.status_code == 400
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BUG: when the API call or PDF generation fails, export_pdf logs the "
-    "error and returns None, so Flask answers with an HTTP 500 TypeError",
-)
 def test_export_pdf_failure_returns_http_error_response(client, api, pdf):
     api.side_effect = ConnectionError("API down")
     response = client.get("/en/export_pdf?item_id=%s&repo=dummy" % DOI)
@@ -597,22 +551,10 @@ def test_export_pdf_failure_returns_http_error_response(client, api, pdf):
 # ------------------------------------------------------------------- app set-up
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BUG: no SECRET_KEY is configured, so session['lang'] raises RuntimeError "
-    "and every page returns HTTP 500 out of the box",
-)
-def test_app_works_without_manual_secret_key(web, monkeypatch):
-    monkeypatch.setattr(web.app, "template_folder", str(REPO_ROOT / "templates"))
-    monkeypatch.setattr(web.app, "secret_key", None)
-    assert web.app.test_client().get("/en/faq").status_code == 200
+def test_app_has_secret_key_out_of_the_box(web):
+    assert web.app.secret_key
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="BUG: Flask(__name__) looks for templates in fair_eva/templates, but they "
-    "live in <repo>/templates since web.py moved into the package",
-)
 def test_default_template_folder_exists(web):
     assert (Path(web.app.root_path) / web.app.template_folder).is_dir()
 
@@ -632,33 +574,13 @@ def scored_blocks(with_result=True):
     return block
 
 
-def bokeh_major():
-    import bokeh
-
-    return int(bokeh.__version__.split(".")[0])
-
-
 def test_group_chart(web):
     script, div = web.group_chart(scored_blocks(with_result=False))
     assert "<script" in script
     assert "<div" in div
 
 
-@pytest.mark.skipif(
-    bokeh_major() >= 3, reason="plot_height was removed in bokeh 3 (see xfail below)"
-)
 def test_fair_chart(web):
     script, div = web.fair_chart(scored_blocks(), 63.8)
     assert "<script" in script
-    assert "<div" in div
-
-
-@pytest.mark.skipif(bokeh_major() < 3, reason="only relevant with bokeh>=3")
-@pytest.mark.xfail(
-    strict=True,
-    reason="BUG: fair_chart passes plot_height to figure(), removed in bokeh 3 "
-    "(bokeh is not pinned), so every evaluation page crashes with AttributeError",
-)
-def test_fair_chart_with_bokeh_3(web):
-    script, div = web.fair_chart(scored_blocks(), 63.8)
     assert "<div" in div
