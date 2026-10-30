@@ -33,7 +33,7 @@ dependencies = [
     "flask_babel",
     "reportlab",
     # imported by fair_eva/web.py, fair_eva/utils/*.py
-    "bokeh",
+    "bokeh>=3",
     "numpy",
     "rdflib",
     "requests",
