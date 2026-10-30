@@ -9,7 +9,13 @@ UUID = "123e4567-e89b-12d3-a456-426614174000"
 
 @pytest.mark.parametrize(
     "points, color",
-    [(0, "#E74C3C"), (49, "#E74C3C"), (50, "#F4D03F"), (80, "#F4D03F"), (81, "#2ECC71")],
+    [
+        (0, "#E74C3C"),
+        (49, "#E74C3C"),
+        (50, "#F4D03F"),
+        (80, "#F4D03F"),
+        (81, "#2ECC71"),
+    ],
 )
 def test_get_color(points, color):
     assert ut.get_color(points) == color
