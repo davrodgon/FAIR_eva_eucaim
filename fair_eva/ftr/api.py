@@ -42,7 +42,10 @@ def _plugins():
         if name.startswith(("_", ".")):
             continue
         try:
-            if resources.files(rda.PLUGIN_PATH).joinpath(name, "plugin.py").is_file():
+            # one joinpath per level: with several arguments it needs python >= 3.11 for
+            # namespace packages, which is what fair_eva.plugin is
+            plugin_dir = resources.files(rda.PLUGIN_PATH).joinpath(name)
+            if plugin_dir.joinpath("plugin.py").is_file():
                 plugins.append(name)
         except (ModuleNotFoundError, OSError):  # pragma: no cover - defensive
             continue
