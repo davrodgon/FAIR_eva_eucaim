@@ -36,6 +36,7 @@ dependencies = [
     "bokeh>=3",
     "numpy",
     "rdflib",
+    "pyshacl>=0.26",
     "requests",
     "PyPDF2",
 ]

@@ -18,6 +18,7 @@ Babel
 flask_babel
 reportlab
 rdflib
+pyshacl>=0.26
 dicttoxml
 tqdm==4.66.1
 python-dwca-reader==0.15.1
