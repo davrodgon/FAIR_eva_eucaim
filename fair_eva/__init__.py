@@ -14,6 +14,8 @@ app.add_api(
     arguments={"title": "FAIR evaluator"},
     resolver=RestyResolver("fair_eva.api"),
 )
+# FAIR Testing Resource (FTR) API, served under /v1.0/ftr (see docs/ftr_ostrails.md)
+app.add_api("ftr/ftr-api.yaml", arguments={"title": "FAIR EVA FTR"})
 
 
 def set_parser():

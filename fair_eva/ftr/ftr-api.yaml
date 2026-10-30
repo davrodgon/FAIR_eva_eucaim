@@ -1,0 +1,254 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: FAIR EVA - FAIR Testing Resource (FTR) API
+  description: |
+    FAIR EVA tests described and executed following the OSTrails FAIR Testing Resource
+    vocabulary (FTR) 1.3.0. A *test* is the pair `plugin + indicator`; the *metric* it
+    implements is the RDA indicator. Responses are RDF: JSON-LD (default) or Turtle,
+    selected with the `Accept` header or the `format` query parameter. See
+    `docs/ftr_ostrails.md`.
+  license:
+    name: MIT
+servers:
+  - url: http://localhost:9090/v1.0/ftr
+paths:
+  /tests:
+    get:
+      summary: Describe the tests (plugin + indicator)
+      description: >
+        Returns the FTR description of every test, or of those of one plugin. With
+        `testid` (`<plugin>/<indicator>` or the IRI of the test) returns that test only.
+      tags:
+        - FTR tests
+      operationId: fair_eva.ftr.api.list_tests
+      parameters:
+        - $ref: "#/components/parameters/Plugin"
+        - name: testid
+          in: query
+          required: false
+          description: Test to describe, `<plugin>/<indicator>` or its IRI (as in the FTR OpenAPI template)
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Format"
+      responses:
+        "200":
+          $ref: "#/components/responses/Rdf"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "406":
+          $ref: "#/components/responses/Error"
+
+  /tests/{plugin}/{indicator}:
+    get:
+      summary: Describe one test
+      tags:
+        - FTR tests
+      operationId: fair_eva.ftr.api.get_test
+      parameters:
+        - $ref: "#/components/parameters/PluginPath"
+        - $ref: "#/components/parameters/IndicatorPath"
+        - $ref: "#/components/parameters/Format"
+      responses:
+        "200":
+          $ref: "#/components/responses/Rdf"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "406":
+          $ref: "#/components/responses/Error"
+
+  /metrics:
+    get:
+      summary: Describe the metrics (RDA indicators)
+      description: >
+        Returns the FTR description of the metrics and of the tests that implement
+        them. With `metricid` (indicator id or IRI of the metric) returns that one only.
+      tags:
+        - FTR metrics
+      operationId: fair_eva.ftr.api.list_metrics
+      parameters:
+        - name: metricid
+          in: query
+          required: false
+          description: Metric to describe, the indicator id (e.g. `rda_f1_01m`) or its IRI
+          schema:
+            type: string
+        - $ref: "#/components/parameters/Format"
+      responses:
+        "200":
+          $ref: "#/components/responses/Rdf"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "406":
+          $ref: "#/components/responses/Error"
+
+  /metrics/{indicator}:
+    get:
+      summary: Describe one metric
+      tags:
+        - FTR metrics
+      operationId: fair_eva.ftr.api.get_metric
+      parameters:
+        - $ref: "#/components/parameters/IndicatorPath"
+        - $ref: "#/components/parameters/Format"
+      responses:
+        "200":
+          $ref: "#/components/responses/Rdf"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "406":
+          $ref: "#/components/responses/Error"
+
+  /assess/test/{plugin}/{indicator}:
+    post:
+      summary: Run one test on a resource
+      description: Returns an FTR `TestResult` (with the `Test` it comes from).
+      tags:
+        - FTR assessment
+      operationId: fair_eva.ftr.api.assess_test
+      parameters:
+        - $ref: "#/components/parameters/PluginPath"
+        - $ref: "#/components/parameters/IndicatorPath"
+        - $ref: "#/components/parameters/Format"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessmentRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/Rdf"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "406":
+          $ref: "#/components/responses/Error"
+
+  /assess/plugin/{plugin}:
+    post:
+      summary: Run several tests of a plugin on a resource
+      description: >
+        Returns an FTR `TestResultSet` with one `TestResult` per test. All the tests of
+        the plugin are run unless `tests` lists the indicators to run.
+      tags:
+        - FTR assessment
+      operationId: fair_eva.ftr.api.assess_plugin
+      parameters:
+        - $ref: "#/components/parameters/PluginPath"
+        - $ref: "#/components/parameters/Format"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/AssessmentRequest"
+                - type: object
+                  properties:
+                    tests:
+                      type: array
+                      description: Indicators to run (e.g. `rda_f1_01m`). All if omitted.
+                      items:
+                        type: string
+      responses:
+        "200":
+          $ref: "#/components/responses/Rdf"
+        "400":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "406":
+          $ref: "#/components/responses/Error"
+
+components:
+  parameters:
+    Plugin:
+      name: plugin
+      in: query
+      required: false
+      description: Only the tests of this plugin
+      schema:
+        type: string
+    PluginPath:
+      name: plugin
+      in: path
+      required: true
+      description: Plugin name (see `/v1.0/endpoints`)
+      schema:
+        type: string
+    IndicatorPath:
+      name: indicator
+      in: path
+      required: true
+      description: RDA indicator id, e.g. `rda_f1_01m`
+      schema:
+        type: string
+    Format:
+      name: format
+      in: query
+      required: false
+      description: Representation, takes precedence over the `Accept` header
+      schema:
+        type: string
+        enum: [jsonld, turtle, ttl, json]
+  responses:
+    Rdf:
+      description: RDF according to the FTR vocabulary
+      headers:
+        Vary:
+          schema:
+            type: string
+      content:
+        application/ld+json:
+          schema:
+            type: string
+        text/turtle:
+          schema:
+            type: string
+        application/json:
+          schema:
+            type: string
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    AssessmentRequest:
+      type: object
+      required:
+        - resource_identifier
+      properties:
+        resource_identifier:
+          type: string
+          description: Identifier of the digital object to assess (same as `id` in the `/rda/*` endpoints)
+          example: 10.5281/zenodo.2654428
+        api_endpoint:
+          type: string
+          description: Endpoint the plugin queries (same as `api_endpoint` in the `/rda/*` endpoints)
+        lang:
+          type: string
+          description: Language of the messages
+          default: en
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: integer
+          format: int32
+        message:
+          type: string
