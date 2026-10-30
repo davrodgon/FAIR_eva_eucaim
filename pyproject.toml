@@ -36,6 +36,7 @@ dependencies = [
     "bokeh>=3",
     "numpy",
     "rdflib",
+    # SHACL validation (core) and validation of the FTR output against the FTR shapes
     "pyshacl>=0.26",
     "requests",
     "PyPDF2",

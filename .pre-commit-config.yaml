@@ -1,3 +1,5 @@
+# Third-party files copied verbatim (see the README there): the hooks must not alter them
+exclude: ^fair_eva/tests/data/ftr_shacl/
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
   rev: v3.2.0

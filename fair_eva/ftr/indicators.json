@@ -1,0 +1,289 @@
+[
+  {
+    "id": "rda_f1_01m",
+    "code": "RDA-F1-01M",
+    "principle": "F1",
+    "title": "Metadata is identified by a persistent identifier",
+    "description": "This indicator is linked to the following principle: F1 (meta)data are assigned a globally unique and eternally persistent identifier. This indicator evaluates whether or not the metadata is identified by a persistent identifier. A persistent identifier ensures that the metadata will remain findable over time, and reduces the risk of broken links."
+  },
+  {
+    "id": "rda_f1_01d",
+    "code": "RDA-F1-01D",
+    "principle": "F1",
+    "title": "Data is identified by a persistent identifier",
+    "description": "This indicator is linked to the following principle: F1 (meta)data are assigned a globally unique and eternally persistent identifier. This indicator evaluates whether or not the data is identified by a persistent identifier. A persistent identifier ensures that the data will remain findable over time, and reduces the risk of broken links."
+  },
+  {
+    "id": "rda_f1_02m",
+    "code": "RDA-F1-02M",
+    "principle": "F1",
+    "title": "Metadata is identified by a globally unique identifier",
+    "description": "This indicator is linked to the following principle: F1 (meta)data are assigned a globally unique and eternally persistent identifier. The indicator serves to evaluate whether the identifier of the metadata is globally unique, i.e. that there are no two identical identifiers that identify different metadata records."
+  },
+  {
+    "id": "rda_f1_02d",
+    "code": "RDA-F1-02D",
+    "principle": "F1",
+    "title": "Data is identified by a globally unique identifier",
+    "description": "This indicator is linked to the following principle: F1 (meta)data are assigned a globally unique and eternally persistent identifier. The indicator serves to evaluate whether the identifier of the data is globally unique, i.e. that there are no two people that would use that same identifier for two different digital objects."
+  },
+  {
+    "id": "rda_f2_01m",
+    "code": "RDA-F2-01M",
+    "principle": "F2",
+    "title": "Rich metadata is provided to allow discovery",
+    "description": "This indicator is linked to the following principle: F2: Data are described with rich metadata. The indicator is about the presence of metadata, but also about how much metadata is provided and how well the provided metadata supports discovery."
+  },
+  {
+    "id": "rda_f3_01m",
+    "code": "RDA-F3-01M",
+    "principle": "F3",
+    "title": "Metadata includes the identifier for the data",
+    "description": "This indicator is linked to the following principle: F3: Metadata clearly and explicitly include the identifier of the data they describe. The indicator deals with the inclusion of the reference (i.e. the identifier) of the digital object in the metadata so that the digital object can be accessed."
+  },
+  {
+    "id": "rda_f4_01m",
+    "code": "RDA-F4-01M",
+    "principle": "F4",
+    "title": "Metadata is offered in such a way that it can be harvested and indexed",
+    "description": "This indicator is linked to the following principle: F4: (Meta)data are registered or indexed in a searchable resource. The indicator tests whether the metadata is offered in such a way that it can be indexed. In some cases, metadata could be provided together with the data to a local institutional repository or to a domain-specific or regional portal, or metadata could be included in a landing page where it can be harvested by a search engine. The indicator remains broad enough on purpose not to limit the way how and by whom the harvesting and indexing of the data might be done."
+  },
+  {
+    "id": "rda_a1_01m",
+    "code": "RDA-A1-01M",
+    "principle": "A1",
+    "title": "Metadata contains information to enable the user to get access to the data",
+    "description": "This indicator is linked to the following principle: A1: (Meta)data are retrievable by their identifier using a standardised communication protocol. The indicator refers to the information that is necessary to allow the requester to gain access to the digital object. It is (i) about whether there are restrictions to access the data (i.e. access to the data may be open, restricted or closed), (ii) the actions to be taken by a person who is interested to access the data, in particular when the data has not been published on the Web and (iii) specifications that the resources are available through eduGAIN or through specialised solutions such as proposed for EPOS."
+  },
+  {
+    "id": "rda_a1_02m",
+    "code": "RDA-A1-02M",
+    "principle": "A1",
+    "title": "Metadata can be accessed manually (i.e. with human intervention)",
+    "description": "This indicator is linked to the following principle: A1: (Meta)data are retrievable by their identifier using a standardised communication protocol. The indicator refers to any human interactions that are needed if the requester wants to access metadata. The FAIR principle refers mostly to automated interactions where a machine is able to access the metadata, but there may also be metadata that require human interactions. This may be important in cases where the metadata itself contains sensitive information. Human interaction might involve sending an e-mail to the metadata owner, or calling by telephone to receive instructions."
+  },
+  {
+    "id": "rda_a1_02d",
+    "code": "RDA-A1-02D",
+    "principle": "A1",
+    "title": "Data can be accessed manually (i.e. with human intervention)",
+    "description": "This indicator is linked to the following principle: A1: (Meta)data are retrievable by their identifier using a standardised communication protocol. The indicator refers to any human interactions that are needed if the requester wants to access the digital object. The FAIR principle refers mostly to automated interactions where a machine is able to access the digital object, but there may also be digital objects that require human interactions, such as clicking on a link on a landing page, sending an e-mail to the data owner, or even calling by telephone. The indicator can be evaluated by looking for information in the metadata that describes how access to the digital object can be obtained through human intervention."
+  },
+  {
+    "id": "rda_a1_03m",
+    "code": "RDA-A1-03M",
+    "principle": "A1",
+    "title": "Metadata identifier resolves to a metadata record",
+    "description": "This indicator is linked to the following principle: A1: (Meta)data are retrievable by their identifier using a standardised communication protocol. This indicator is about the resolution of the metadata identifier. The identifier assigned to the metadata should be associated with a resolution service that enables access to the metadata record."
+  },
+  {
+    "id": "rda_a1_03d",
+    "code": "RDA-A1-03D",
+    "principle": "A1",
+    "title": "Data identifier resolves to a digital object",
+    "description": "This indicator is linked to the following principle: A1: (Meta)data are retrievable by their identifier using a standardised communication protocol. More information about that principle can be found here. This indicator is about the resolution of the identifier that identifies the digital object. The identifier assigned to the data should be associated with a formally defined retrieval/resolution mechanism that enables access to the digital object, or provides access instructions for access in the case of human-mediated access. The FAIR principle and this indicator do not say anything about the mutability or immutability of the digital object that is identified by the data identifier -- this is an aspect that should be governed by a persistence policy of the data provider"
+  },
+  {
+    "id": "rda_a1_04m",
+    "code": "RDA-A1-04M",
+    "principle": "A1",
+    "title": "Metadata is accessed through standardised protocol",
+    "description": "This indicator is linked to the following principle: A1: (Meta)data are retrievable by their identifier using a standardised communication protocol. More information about that principle can be found here. The indicator concerns the protocol through which the metadata is accessed and requires the protocol to be defined in a standard."
+  },
+  {
+    "id": "rda_a1_04d",
+    "code": "RDA-A1-04D",
+    "principle": "A1",
+    "title": "Data is accessible through standardised protocol",
+    "description": "This indicator is linked to the following principle: A1: (Meta)data are retrievable by their identifier using a standardised communication protocol. The indicator concerns the protocol through which the digital object is accessed and requires the protocol to be defined in a standard."
+  },
+  {
+    "id": "rda_a1_05d",
+    "code": "RDA-A1-05D",
+    "principle": "A1",
+    "title": "Data can be accessed automatically (i.e. by a computer program)",
+    "description": "This indicator is linked to the following principle: A1: (Meta)data are retrievable by their identifier using a standardised communication protocol. The indicator refers to automated interactions between machines to access digital objects. The way machines interact and grant access to the digital object will be evaluated by the indicator."
+  },
+  {
+    "id": "rda_a1_1_01m",
+    "code": "RDA-A1.1-01M",
+    "principle": "A1.1",
+    "title": "Metadata is accessible through a free access protocol",
+    "description": "This indicator is linked to the following principle: A1.1: The protocol is open, free and universally implementable. The indicator tests that the protocol that enables the requester to access metadata can be freely used. Such free use of the protocol enhances data reusability."
+  },
+  {
+    "id": "rda_a1_1_01d",
+    "code": "RDA-A1.1-01D",
+    "principle": "A1.1",
+    "title": "Data is accessible through a free access protocol",
+    "description": "This indicator is linked to the following principle: A1.1: The protocol is open, free and universally implementable. The indicator requires that the protocol can be used free of charge which facilitates unfettered access."
+  },
+  {
+    "id": "rda_a1_2_01d",
+    "code": "RDA-A1.2-01D",
+    "principle": "A1.2",
+    "title": "Data is accessible through an access protocol that supports authentication and authorisation",
+    "description": "This indicator is linked to the following principle: A1.2: The protocol allows for an authentication and authorisation where necessary. The indicator requires the way that access to the digital object can be authenticated and authorised and that data accessibility is specifically described and adequately documented."
+  },
+  {
+    "id": "rda_a2_01m",
+    "code": "RDA-A2-01M",
+    "principle": "A2",
+    "title": "Metadata is guaranteed to remain available after data is no longer available",
+    "description": "This indicator is linked to the following principle: A2: Metadata should be accessible even when the data is no longer available. The indicator intends to verify that information about a digital object is still available after the object has been deleted or otherwise has been lost. If possible, the metadata that remains available should also indicate why the object is no longer available."
+  },
+  {
+    "id": "rda_i1_01m",
+    "code": "RDA-I1-01M",
+    "principle": "I1",
+    "title": "Metadata uses knowledge representation expressed in standardised format",
+    "description": "This indicator is linked to the following principle: I1: (Meta)data use a formal, accessible, shared, and broadly applicable language for knowledge representation. The indicator serves to determine that an appropriate standard is used to express knowledge, for example, controlled vocabularies for subject classifications."
+  },
+  {
+    "id": "rda_i1_01d",
+    "code": "RDA-I1-01D",
+    "principle": "I1",
+    "title": "Data uses knowledge representation expressed in standardised format",
+    "description": "This indicator is linked to the following principle: I1: (Meta)data use a formal, accessible, shared, and broadly applicable language for knowledge representation. The indicator serves to determine that an appropriate standard is used to express knowledge, in particular the data model and format."
+  },
+  {
+    "id": "rda_i1_02m",
+    "code": "RDA-I1-02M",
+    "principle": "I1",
+    "title": "Metadata uses machine-understandable knowledge representation",
+    "description": "This indicator is linked to the following principle: I1: (Meta)data use a formal, accessible, shared, and broadly applicable language for knowledge representation. This indicator focuses on the machine-understandability aspect of the metadata. This means that metadata should be readable and thus interoperable for machines without any requirements such as specific translators or mappings."
+  },
+  {
+    "id": "rda_i1_02d",
+    "code": "RDA-I1-02D",
+    "principle": "I1",
+    "title": "Data uses machine-understandable knowledge representation",
+    "description": "This indicator is linked to the following principle: I1: (Meta)data use a formal, accessible, shared, and broadly applicable language for knowledge representation. This indicator focuses on the machine-understandability aspect of the data. This means that data should be readable and thus interoperable for machines without any requirements such as specific translators or mappings."
+  },
+  {
+    "id": "rda_i2_01m",
+    "code": "RDA-I2-01M",
+    "principle": "I2",
+    "title": "Metadata uses FAIR-compliant vocabularies",
+    "description": "This indicator is linked to the following principle: I2: (Meta)data use vocabularies that follow the FAIR principles. The indicator requires the vocabulary used for the metadata to conform to the FAIR principles, and at least be documented and resolvable using globally unique and persistent identifiers. The documentation needs to be easily findable and accessible."
+  },
+  {
+    "id": "rda_i2_01d",
+    "code": "RDA-I2-01D",
+    "principle": "I2",
+    "title": "Data uses FAIR-compliant vocabularies",
+    "description": "This indicator is linked to the following principle: I2: (Meta)data use vocabularies that follow the FAIR principles. The indicator requires the controlled vocabulary used for the data to conform to the FAIR principles, and at least be documented and resolvable using globally unique"
+  },
+  {
+    "id": "rda_i3_01m",
+    "code": "RDA-I3-01M",
+    "principle": "I3",
+    "title": "Metadata includes references to other metadata",
+    "description": "This indicator is linked to the following principle: I3: (Meta)data include qualified references to other (meta)data. The indicator is about the way that metadata is connected to other metadata, for example through links to information about organisations, people, places, projects or time periods that are related to the digital object that the metadata describes."
+  },
+  {
+    "id": "rda_i3_01d",
+    "code": "RDA-I3-01D",
+    "principle": "I3",
+    "title": "Data includes references to other data",
+    "description": "This indicator is linked to the following principle: I3: (Meta)data include qualified references to other (meta)data. This indicator is about the way data is connected to other data, for example linking to previous or related research data that provides additional context to the data."
+  },
+  {
+    "id": "rda_i3_02m",
+    "code": "RDA-I3-02M",
+    "principle": "I3",
+    "title": "Metadata includes references to other data",
+    "description": "This indicator is linked to the following principle: I3: (Meta)data include qualified references to other (meta)data. This indicator is about the way metadata is connected to other data, for example linking to previous or related research data that provides additional context to the data. Please note that this is not about the link from the metadata to the data it describes; that link is considered in principle F3 and in indicator RDA-F3-01M."
+  },
+  {
+    "id": "rda_i3_02d",
+    "code": "RDA-I3-02D",
+    "principle": "I3",
+    "title": "Data includes qualified references to other data",
+    "description": "This indicator is linked to the following principle: I3: (Meta)data include qualified references to other (meta)data. This indicator is about the way data is connected to other data. The references need to be qualified which means that the relationship role of the related resource is specified."
+  },
+  {
+    "id": "rda_i3_03m",
+    "code": "RDA-I3-03M",
+    "principle": "I3",
+    "title": "Metadata includes qualified references to other metadata",
+    "description": "This indicator is linked to the following principle: I3: (Meta)data include qualified references to other (meta)data. This indicator is about the way metadata is connected to other metadata, for example to descriptions of related resources that provide additional context to the data."
+  },
+  {
+    "id": "rda_i3_04m",
+    "code": "RDA-I3-04M",
+    "principle": "I3",
+    "title": "Metadata include qualified references to other data",
+    "description": "This indicator is linked to the following principle: I3: (Meta)data include qualified references to other (meta)data. This indicator is about the way metadata is connected to other data. The references need to be qualified which means that the relationship role of the related resource is specified, for example dataset X is derived from dataset Y."
+  },
+  {
+    "id": "rda_r1_01m",
+    "code": "RDA-R1-01M",
+    "principle": "R1",
+    "title": "Plurality of accurate and relevant attributes are provided to allow reuse",
+    "description": "This indicator is linked to the following principle: R1: (Meta)data are richly described with a plurality of accurate and relevant attributes. The indicator concerns the quantity but also the quality of metadata provided in order to enhance data reusability."
+  },
+  {
+    "id": "rda_r1_1_01m",
+    "code": "RDA-R1.1-01M",
+    "principle": "R1.1",
+    "title": "Metadata includes information about the licence under which the data can be reused",
+    "description": "This indicator is linked to the following principle: R1.1: (Meta)data are released with a clear and accessible data usage license. This indicator is about the information that is provided in the metadata related to the conditions (e.g. obligations, restrictions) under which data can be reused."
+  },
+  {
+    "id": "rda_r1_1_02m",
+    "code": "RDA-R1.1-02M",
+    "principle": "R1.1",
+    "title": "Metadata refers to a standard reuse licence",
+    "description": "This indicator requires the reference to the conditions of reuse to be a standard licence, rather than a locally defined licence. The indicator can be evaluated by verifying that the licence is indeed a standard licence. Examples of standard licences are: Creative Commons licences, Open Data Commons."
+  },
+  {
+    "id": "rda_r1_1_03m",
+    "code": "RDA-R1.1-03M",
+    "principle": "R1.1",
+    "title": "Metadata refers to a machine-understandable reuse licence",
+    "description": "This indicator is linked to the following principle: R1.1: (Meta)data are released with a clear and accessible data usage license. More information about that principle can be found here. This indicator is about the way that the reuse licence is expressed. Rather than being a human-readable text, the licence should be expressed in such a way that it can be processed by machines, without human intervention, for example in automated searches."
+  },
+  {
+    "id": "rda_r1_2_01m",
+    "code": "RDA-R1.2-01M",
+    "principle": "R1.2",
+    "title": "Metadata includes provenance information according to community-specific standards",
+    "description": "This indicator is linked to the following principle: R1.2: (Meta)data are associated with detailed provenance. This indicator requires the metadata to include information about the provenance of the data, i.e. information about the origin, history or workflow that generated the data, in a way that is compliant with the standards that are used in the community in which the data is produced."
+  },
+  {
+    "id": "rda_r1_2_02m",
+    "code": "RDA-R1.2-02M",
+    "principle": "R1.2",
+    "title": "Metadata includes provenance information according to a crosscommunity language",
+    "description": "This indicator is linked to the following principle: R1.2: (Meta)data are associated with detailed provenance. This indicator requires that the metadata provides provenance information according to a cross-domain language."
+  },
+  {
+    "id": "rda_r1_3_01m",
+    "code": "RDA-R1.3-01M",
+    "principle": "R1.3",
+    "title": "Metadata complies with a community standard",
+    "description": "This indicator is linked to the following principle: R1.3: (Meta)data meet domain-relevant community standards. This indicator requires that metadata complies with community standards."
+  },
+  {
+    "id": "rda_r1_3_01d",
+    "code": "RDA-R1.3-01D",
+    "principle": "R1.3",
+    "title": "Data complies with a community standard",
+    "description": "This indicator is linked to the following principle: R1.3: (Meta)data meet domain-relevant community standards. This indicator requires that data complies with community standards."
+  },
+  {
+    "id": "rda_r1_3_02m",
+    "code": "RDA-R1.3-02M",
+    "principle": "R1.3",
+    "title": "Metadata is expressed in compliance with a machineunderstandable community standard",
+    "description": "This indicator is linked to the following principle: R1.3: (Meta)data meet domain-relevant community standards. This indicator requires that the metadata follows a community standard that has a machineunderstandable expression."
+  },
+  {
+    "id": "rda_r1_3_02d",
+    "code": "RDA-R1.3-02D",
+    "principle": "R1.3",
+    "title": "Data is expressed in compliance with a machine-understandable",
+    "description": "This indicator is linked to the following principle: R1.3: (Meta)data meet domain-relevant community standards. This indicator requires that the data follows a community standard that has a machineunderstandable expression."
+  }
+]

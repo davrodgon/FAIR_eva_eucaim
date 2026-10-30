@@ -13,3 +13,4 @@ The documentation is organised using the [Diátaxis](https://diataxis.fr/) frame
 - **[Using FAIR EVA](usage.md)** – contains tutorials and how‑to guides for running evaluations from the command line, via the REST API or through the web interface.
 - **[Developing new plugins](creating_plugin.md)** – guides developers in building their own plugins.
 - **[SHACL validation](shacl_validation.md)** – validates RDF against configurable SHACL shapes and records the name, version and SHA-256 of the shapes used.
+- **[FTR / OSTrails](ftr_ostrails.md)** – how tests are described and results published with the OSTrails FAIR Testing Resource vocabulary (design decisions, mapping, open questions).
