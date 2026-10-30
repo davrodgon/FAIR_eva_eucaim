@@ -1484,6 +1484,66 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  # ---- BEGIN generic SHACL validation endpoint (fair_eva.shacl) ----
+  /shacl/validate:
+    x-indicator: False
+    post:
+      summary: Validate RDF against the SHACL shape sets configured on the server
+      tags:
+        - SHACL validation
+      operationId: fair_eva.api.shacl_api.validate_endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: string
+                  description: RDF text to validate
+                format:
+                  type: string
+                  default: turtle
+                  description: Serialisation of data (turtle, json-ld, xml, n3, nt)
+                repo:
+                  type: string
+                  description: Plugin whose configuration selects the shape sets
+                shape_sets:
+                  type: array
+                  items:
+                    type: string
+                  description: Ids of configured [shacl:<id>] sets (overrides the plugin selection)
+                ontologies:
+                  type: array
+                  items:
+                    type: string
+                combine:
+                  type: string
+                  enum: [separate, merged]
+      responses:
+        '200':
+          description: Validation report, with the provenance (name, version, SHA-256) of the shapes used
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Invalid request or SHACL configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  # ---- END generic SHACL validation endpoint ----
+
 
 
 
