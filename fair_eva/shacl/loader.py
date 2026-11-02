@@ -5,10 +5,19 @@ handed to the RDF parser**: the file content, the HTTP response body of this
 execution, or the inline content (``str`` encoded as UTF-8).  Nothing is
 decoded, re-serialised or canonicalised first, so the value can be reproduced
 with ``sha256sum`` on the same file.
+
+A *set* (``sources`` or a glob pattern) merges several documents into one
+shapes graph.  Its SHA-256 is computed over the SHA-256 of its documents, sorted
+and one per line (each followed by ``\n``); it does not depend on the order or
+the names of the files and can be reproduced with::
+
+    sha256sum <files> | cut -d' ' -f1 | LC_ALL=C sort | sha256sum
 """
 
 from __future__ import annotations
 
+import copy
+import glob
 import hashlib
 import logging
 import os
@@ -16,7 +25,7 @@ import pathlib
 import re
 import threading
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 from urllib.parse import urlparse
 
 import requests
@@ -28,7 +37,9 @@ from fair_eva.shacl.errors import ShapesConfigError, ShapesLoadError
 from fair_eva.shacl.models import (
     HASH_ALGORITHM,
     HASH_INPUT,
+    HASH_INPUT_SET,
     ROLE_SHAPES,
+    SOURCE_TYPE_SET,
     UNSPECIFIED,
     LoadedShapes,
     ShapesProvenance,
@@ -38,6 +49,7 @@ from fair_eva.shacl.models import (
 logger = logging.getLogger("api.shacl")
 
 _SCHEME_RE = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*://")
+_GLOB_RE = re.compile(r"[*?[]")
 
 #: Accepted spellings of the supported RDF serialisations -> rdflib parser name.
 FORMAT_ALIASES = {
@@ -93,11 +105,29 @@ def is_url(source: str) -> bool:
     return True
 
 
+def has_glob(source: str) -> bool:
+    """True for local paths with glob characters (URLs are never expanded)."""
+    return bool(_GLOB_RE.search(source)) and not _SCHEME_RE.match(source)
+
+
+def is_set(spec: ShapesSpec) -> bool:
+    """True when ``spec`` describes a set of documents (``sources`` or a glob)."""
+    return spec.sources is not None or (
+        spec.source is not None and has_glob(spec.source)
+    )
+
+
+def documents_sha256(digests: List[str]) -> str:
+    """SHA-256 of a set: over the sorted SHA-256 of its documents, one per line."""
+    manifest = "".join("%s\n" % digest for digest in sorted(digests))
+    return hashlib.sha256(manifest.encode("ascii")).hexdigest()
+
+
 def default_id(spec: ShapesSpec, index: int = 0, role: str = ROLE_SHAPES) -> str:
     """Identifier of a spec: its ``id``, the file name, its name or ``<role>-<n>``."""
     if spec.id:
         return spec.id
-    if spec.source:
+    if spec.source and not has_glob(spec.source):
         path = urlparse(spec.source).path if is_url(spec.source) else spec.source
         stem = os.path.splitext(os.path.basename(path.rstrip("/\\")))[0]
         if stem:
@@ -114,8 +144,8 @@ def _resolve_local_path(source: str, base_dir: Optional[str]) -> str:
     return os.path.abspath(path)
 
 
-def _read_file(spec: ShapesSpec) -> Tuple[bytes, str]:
-    path = _resolve_local_path(spec.source, spec.base_dir)
+def _read_file(source: str, base_dir: Optional[str]) -> Tuple[bytes, str]:
+    path = _resolve_local_path(source, base_dir)
     try:
         with open(path, "rb") as handle:
             return handle.read(), path
@@ -125,17 +155,15 @@ def _read_file(spec: ShapesSpec) -> Tuple[bytes, str]:
         raise ShapesLoadError("Cannot read shapes file %s: %s" % (path, exc)) from exc
 
 
-def _download(spec: ShapesSpec) -> Tuple[bytes, str, Optional[str]]:
+def _download(source: str, timeout: float) -> Tuple[bytes, str, Optional[str]]:
     try:
-        response = requests.get(
-            spec.source, timeout=spec.timeout, headers={"Accept": _ACCEPT}
-        )
+        response = requests.get(source, timeout=timeout, headers={"Accept": _ACCEPT})
         response.raise_for_status()
     except requests.RequestException as exc:
         raise ShapesLoadError(
-            "Could not download shapes from %s: %s" % (spec.source, exc)
+            "Could not download shapes from %s: %s" % (source, exc)
         ) from exc
-    final_url = getattr(response, "url", None) or spec.source
+    final_url = getattr(response, "url", None) or source
     content_type = (response.headers or {}).get("Content-Type")
     return response.content, final_url, content_type
 
@@ -241,14 +269,22 @@ def _same_text(a: Optional[str], b: Optional[str]) -> bool:
 # --------------------------------------------------------------------------- #
 # Parsed-graph cache
 # --------------------------------------------------------------------------- #
-#: Number of parsed documents kept in memory.  The cache is keyed by the SHA-256
-#: of the bytes (plus format and base IRI), which are read -- and hashed -- again
-#: on every load, so provenance always describes the content of that run; only
-#: the expensive parsing is skipped when the content did not change.  Graphs
-#: handed out by :func:`load_shapes` are shared: treat them as read-only.
+#: Number of parsed specs kept in memory (a document, or a whole set: its merged
+#: graph and the metadata of its documents take a single entry).  The cache is
+#: keyed by the SHA-256 of the bytes (plus format and base IRI), which are read --
+#: and hashed -- again on every load, so provenance always describes the content
+#: of that run; only the expensive parsing is skipped when the content did not
+#: change.  Graphs handed out by :func:`load_shapes` are shared: treat them as
+#: read-only.
 GRAPH_CACHE_SIZE = 16
-_graph_cache: "OrderedDict[Tuple[str, str, Optional[str]], Graph]" = OrderedDict()
+_graph_cache: "OrderedDict[Tuple, _Parsed]" = OrderedDict()
 _graph_cache_lock = threading.Lock()
+
+
+class _Parsed(NamedTuple):
+    graph: Graph
+    #: (triples, declared metadata, notes) of each document
+    documents: List[Tuple[int, Dict[str, Any], List[str]]]
 
 
 def clear_graph_cache() -> None:
@@ -257,41 +293,188 @@ def clear_graph_cache() -> None:
         _graph_cache.clear()
 
 
-def _parse_cached(
-    raw: bytes, fmt: str, base: Optional[str], digest: str, label: str
-) -> Graph:
-    key = (digest, fmt, base)
+def _cache_get(key: Tuple) -> Optional[_Parsed]:
     with _graph_cache_lock:
         cached = _graph_cache.get(key)
         if cached is not None:
             _graph_cache.move_to_end(key)
-            return cached
+        return cached
+
+
+def _cache_put(key: Tuple, value: _Parsed) -> None:
+    with _graph_cache_lock:
+        _graph_cache[key] = value
+        while len(_graph_cache) > GRAPH_CACHE_SIZE:
+            _graph_cache.popitem(last=False)
+
+
+# --------------------------------------------------------------------------- #
+# Reading the documents of a spec
+# --------------------------------------------------------------------------- #
+class _Document(NamedTuple):
+    raw: bytes
+    digest: str
+    source: str
+    source_type: str
+    location: str
+    final_url: Optional[str]
+    fmt: str
+    base: Optional[str]
+
+    def summary(
+        self, triples: int, declared: Dict[str, Any], notes: List[str]
+    ) -> Dict[str, Any]:
+        return {
+            "source": self.source,
+            "source_type": self.source_type,
+            "final_url": self.final_url,
+            "format": self.fmt,
+            "sha256": self.digest,
+            "size_bytes": len(self.raw),
+            "triples": triples,
+            "declared_in_file": declared,
+            "notes": notes,
+        }
+
+
+def _expand_sources(spec: ShapesSpec) -> List[str]:
+    """Paths / URLs of a set, glob patterns expanded (sorted) and duplicates removed."""
+    patterns = list(spec.sources) if spec.sources is not None else [spec.source]
+    expanded: List[str] = []
+    seen = set()
+    for pattern in patterns:
+        if has_glob(pattern):
+            full = _resolve_local_path(pattern, spec.base_dir)
+            candidates = sorted(
+                path for path in glob.glob(full, recursive=True) if os.path.isfile(path)
+            )
+            if not candidates:
+                raise ShapesLoadError("No shapes file matches %s" % full)
+        else:
+            candidates = [pattern]
+        for candidate in candidates:
+            key = (
+                candidate
+                if is_url(candidate)
+                else _resolve_local_path(candidate, spec.base_dir)
+            )
+            if key not in seen:
+                seen.add(key)
+                expanded.append(candidate)
+    return expanded
+
+
+def _read_document(spec: ShapesSpec, source: Optional[str], set_id: str) -> _Document:
+    """Read (without parsing) one document: inline ``content`` or ``source``."""
+    final_url = None
+    content_type = None
+    if source is None:
+        raw = (
+            spec.content.encode("utf-8")
+            if isinstance(spec.content, str)
+            else bytes(spec.content)
+        )
+        source, source_type = "<inline>", "inline"
+        location = "<inline:%s>" % set_id
+    elif is_url(source):
+        raw, final_url, content_type = _download(source, spec.timeout)
+        source_type, location = "url", source
+    else:
+        raw, source = _read_file(source, spec.base_dir)
+        source_type, location = "file", source
+    fmt = _detect_format(spec, location, content_type)
+    base = pathlib.Path(source).as_uri() if source_type == "file" else final_url
+    return _Document(
+        raw=raw,
+        digest=hashlib.sha256(raw).hexdigest(),
+        source=source,
+        source_type=source_type,
+        location=location,
+        final_url=final_url,
+        fmt=fmt,
+        base=base,
+    )
+
+
+def _parse_document(document: _Document, label: str) -> Graph:
     graph = Graph()
     try:
-        graph.parse(data=raw, format=fmt, publicID=base)
+        graph.parse(data=document.raw, format=document.fmt, publicID=document.base)
     except Exception as exc:
         raise ShapesLoadError(
-            "Could not parse %s as %s: %s" % (label, fmt, exc)
+            "Could not parse %s as %s: %s" % (label, document.fmt, exc)
         ) from exc
     if len(graph) == 0:
         raise ShapesLoadError("The %s contains no RDF triples" % label)
-    with _graph_cache_lock:
-        _graph_cache[key] = graph
-        while len(_graph_cache) > GRAPH_CACHE_SIZE:
-            _graph_cache.popitem(last=False)
     return graph
+
+
+def _parse_all(documents: List[_Document], role: str, set_id: str) -> _Parsed:
+    """Parse the documents of a spec and merge them (cached as a whole)."""
+    key = tuple((d.digest, d.fmt, d.base) for d in documents)
+    cached = _cache_get(key)
+    if cached is not None:
+        return cached
+    graphs = [
+        _parse_document(d, "%s '%s' (%s)" % (role, set_id, d.source)) for d in documents
+    ]
+    if len(graphs) == 1:
+        graph = graphs[0]
+    else:
+        graph = Graph()
+        for part in graphs:
+            for prefix, namespace in part.namespaces():
+                graph.bind(prefix, namespace, override=False)
+            graph += part
+    parsed = _Parsed(
+        graph=graph,
+        documents=[(len(g),) + declared_metadata(g) for g in graphs],
+    )
+    _cache_put(key, parsed)
+    return parsed
+
+
+def _declared_by_set(
+    declared: List[Dict[str, Any]], notes: List[str]
+) -> Dict[str, Any]:
+    """Title / version declared by a set: only when its documents agree."""
+    versions = sorted({d["version"] for d in declared if d["version"]})
+    titles = sorted({d["title"] for d in declared if d["title"]})
+    meta: Dict[str, Any] = {
+        "title": titles[0] if len(titles) == 1 else None,
+        "version": None,
+        "version_property": None,
+        "imports": sorted({i for d in declared for i in d["imports"]}),
+    }
+    if len(versions) == 1:
+        meta["version"] = versions[0]
+        properties = {d["version_property"] for d in declared if d["version"]}
+        meta["version_property"] = properties.pop() if len(properties) == 1 else None
+        declaring = sum(1 for d in declared if d["version"])
+        if declaring < len(declared):
+            notes.append(
+                "Version %s declared by %d of %d documents"
+                % (versions[0], declaring, len(declared))
+            )
+    elif len(versions) > 1:
+        notes.append(
+            "The documents declare different versions (%s); ignored as ambiguous"
+            % ", ".join(versions)
+        )
+    return meta
 
 
 # --------------------------------------------------------------------------- #
 # Public entry point
 # --------------------------------------------------------------------------- #
 def load_shapes(spec: Any, index: int = 0, role: str = ROLE_SHAPES) -> LoadedShapes:
-    """Load one shapes document and build its provenance record.
+    """Load one shapes document (or a set of them) and build its provenance.
 
     Parameters
     ----------
     spec : ShapesSpec, mapping or str
-        See :class:`~fair_eva.shacl.models.ShapesSpec`.
+        See :class:`~fair_eva.shacl.models.ShapesSpec`.  ``sources`` or a glob
+        ``source`` load a set: its documents are merged into one graph.
     index : int
         Position used to build a default identifier.
     role : str
@@ -302,65 +485,66 @@ def load_shapes(spec: Any, index: int = 0, role: str = ROLE_SHAPES) -> LoadedSha
     ShapesConfigError
         Invalid specification (unknown format, unsupported URL scheme...).
     ShapesLoadError
-        Missing file, download error, parse error, empty document or
-        ``expected_sha256`` mismatch.
+        Missing file, pattern matching no file, download error, parse error,
+        empty document or ``expected_sha256`` mismatch.
     """
     spec = ShapesSpec.coerce(spec)
     set_id = default_id(spec, index, role)
+    multiple = is_set(spec)
 
-    final_url = None
-    content_type = None
-    if spec.content is not None:
-        raw = (
-            spec.content.encode("utf-8")
-            if isinstance(spec.content, str)
-            else bytes(spec.content)
-        )
-        source, source_type = "<inline>", "inline"
-        location = "<inline:%s>" % set_id
-    elif is_url(spec.source):
-        raw, final_url, content_type = _download(spec)
-        source, source_type, location = spec.source, "url", spec.source
+    sources = _expand_sources(spec) if multiple else [spec.source]
+    documents = [_read_document(spec, source, set_id) for source in sources]
+    if multiple:
+        digest = documents_sha256([d.digest for d in documents])
+        source = ", ".join(spec.sources if spec.sources is not None else [spec.source])
     else:
-        raw, source = _read_file(spec)
-        source_type, location = "file", source
-
-    fmt = _detect_format(spec, location, content_type)
-    digest = hashlib.sha256(raw).hexdigest()
+        digest, source = documents[0].digest, documents[0].source
     if spec.expected_sha256 and spec.expected_sha256 != digest:
         raise ShapesLoadError(
             "SHA-256 mismatch for %s '%s' (%s): expected %s, got %s"
             % (role, set_id, source, spec.expected_sha256, digest)
         )
 
-    base = final_url
-    if source_type == "file":
-        base = pathlib.Path(source).as_uri()
-    graph = _parse_cached(
-        raw, fmt, base, digest, "%s '%s' (%s)" % (role, set_id, source)
-    )
+    parsed = _parse_all(documents, role, set_id)
+    graph = parsed.graph
+    summaries = [
+        # copies: the parsed metadata is shared through the cache
+        document.summary(triples, copy.deepcopy(declared), list(doc_notes))
+        for document, (triples, declared, doc_notes) in zip(documents, parsed.documents)
+    ]
+    declared_list = [summary["declared_in_file"] for summary in summaries]
+    notes: List[str] = []
+    if multiple:
+        declared = _declared_by_set(declared_list, notes)
+    else:
+        declared = declared_list[0]
+        notes.extend(summaries[0]["notes"])
 
-    declared, notes = declared_metadata(graph)
     discrepancies: List[Dict[str, Optional[str]]] = []
 
     # Version: configuration wins; the file only fills the gap.  A version is
     # never invented.
     if spec.version:
         version, version_source = spec.version, "config"
-        if declared["version"] and declared["version"] != spec.version:
-            discrepancies.append(
-                {
+        for document, doc_declared in zip(documents, declared_list):
+            if doc_declared["version"] and doc_declared["version"] != spec.version:
+                discrepancy = {
                     "field": "version",
                     "config": spec.version,
-                    "file": declared["version"],
+                    "file": doc_declared["version"],
                 }
-            )
+                if multiple:
+                    discrepancy["document"] = document.source
+                discrepancies.append(discrepancy)
+        if discrepancies:
             logger.warning(
-                "Version of %s '%s' differs between configuration (%s) and file (%s)",
+                "Version of %s '%s' differs between configuration (%s) and %d "
+                "document(s) (%s)",
                 role,
                 set_id,
                 spec.version,
-                declared["version"],
+                len(discrepancies),
+                ", ".join(sorted({d["file"] for d in discrepancies})),
             )
     elif declared["version"]:
         version, version_source = declared["version"], "file"
@@ -369,7 +553,13 @@ def load_shapes(spec: Any, index: int = 0, role: str = ROLE_SHAPES) -> LoadedSha
 
     if spec.name:
         name, name_source = spec.name, "config"
-        if declared["title"] and not _same_text(declared["title"], spec.name):
+        # The documents of a set are usually modules with their own titles:
+        # only a single document is compared with the configured name.
+        if (
+            not multiple
+            and declared["title"]
+            and not _same_text(declared["title"], spec.name)
+        ):
             discrepancies.append(
                 {"field": "name", "config": spec.name, "file": declared["title"]}
             )
@@ -386,6 +576,7 @@ def load_shapes(spec: Any, index: int = 0, role: str = ROLE_SHAPES) -> LoadedSha
             "is vacuous"
         )
 
+    formats = sorted({d.fmt for d in documents})
     provenance = ShapesProvenance(
         role=role,
         id=set_id,
@@ -395,13 +586,13 @@ def load_shapes(spec: Any, index: int = 0, role: str = ROLE_SHAPES) -> LoadedSha
         version_source=version_source,
         sha256=digest,
         source=source,
-        source_type=source_type,
-        format=fmt,
-        size_bytes=len(raw),
+        source_type=SOURCE_TYPE_SET if multiple else documents[0].source_type,
+        format=formats[0] if len(formats) == 1 else "mixed",
+        size_bytes=sum(len(d.raw) for d in documents),
         triples=len(graph),
-        final_url=final_url,
+        final_url=None if multiple else documents[0].final_url,
         hash_algorithm=HASH_ALGORITHM,
-        hash_input=HASH_INPUT,
+        hash_input=HASH_INPUT_SET if multiple else HASH_INPUT,
         declared_in_file={
             "title": declared["title"],
             "version": declared["version"],
@@ -410,6 +601,7 @@ def load_shapes(spec: Any, index: int = 0, role: str = ROLE_SHAPES) -> LoadedSha
         },
         discrepancies=discrepancies,
         notes=notes,
+        documents=summaries,
     )
     logger.debug("Loaded %s", provenance.describe())
     return LoadedShapes(graph=graph, provenance=provenance)

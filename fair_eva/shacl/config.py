@@ -8,6 +8,10 @@ Shape sets are declared in ``[shacl:<id>]`` sections and selected by id::
     name = Basic resource shapes
     version = 1.2.0
 
+    [shacl:modular]
+    sources = ['shapes/modules/*.ttl', 'shapes/common.ttl']
+    name = Modular profile
+
     [my_plugin]
     shacl_sets = ['basic']
     shacl_ontologies = []
@@ -19,6 +23,8 @@ Shape sets are declared in ``[shacl:<id>]`` sections and selected by id::
     combine = separate
 
 (comments must be on their own lines: the parser does not strip inline ones).
+``sources`` (a list, or one entry per line) declares a set of documents merged
+into one shapes graph; a glob pattern in ``source`` does the same.
 Selection precedence: explicit argument, then ``<plugin> / shacl_sets``, then
 ``[shacl] / default_sets``.  The same sections describe shapes and ontologies;
 the role is given by where they are referenced.
@@ -47,7 +53,15 @@ PLUGIN_ONTOLOGIES_KEY = "shacl_ontologies"
 DEFAULT_SETS_KEY = "default_sets"
 DEFAULT_ONTOLOGIES_KEY = "default_ontologies"
 
-_SET_KEYS = ("source", "format", "name", "version", "expected_sha256", "timeout")
+_SET_KEYS = (
+    "source",
+    "sources",
+    "format",
+    "name",
+    "version",
+    "expected_sha256",
+    "timeout",
+)
 _BOOL_OPTIONS = (
     "advanced",
     "allow_infos",
@@ -145,9 +159,18 @@ def spec_from_section(
             "Unknown key(s) in [%s]: %s (allowed: %s)"
             % (section, ", ".join(unknown), ", ".join(_SET_KEYS))
         )
-    if not values.get("source", "").strip():
-        raise ShapesConfigError("[%s] needs a 'source' (path or URL)" % section)
-    fields: Dict[str, Any] = {k: _unquote(v) for k, v in values.items()}
+    has_source = bool(values.get("source", "").strip())
+    has_sources = bool(values.get("sources", "").strip())
+    if has_source == has_sources:
+        raise ShapesConfigError(
+            "[%s] needs either a 'source' (path or URL) or 'sources' (list of "
+            "paths, glob patterns or URLs)" % section
+        )
+    fields: Dict[str, Any] = {
+        k: _unquote(v) for k, v in values.items() if k != "sources"
+    }
+    if has_sources:
+        fields["sources"] = _parse_list(values["sources"], "[%s] sources" % section)
     if "timeout" in fields:
         try:
             fields["timeout"] = float(fields["timeout"])

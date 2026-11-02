@@ -33,6 +33,14 @@ expected_sha256 = 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a
 # Optional download timeout in seconds (URLs)
 timeout = 30
 
+# A set of several documents merged into one shapes graph (see "Sets of documents")
+[shacl:modular]
+sources =
+    shapes/modules/*.ttl
+    shapes/common.ttl
+name = Modular profile
+version = 2.0
+
 # Same keys; referenced as ontology below
 [shacl:classes]
 source = https://example.org/classes.ttl
@@ -76,10 +84,33 @@ Notes:
   read-only.
 * `owl:imports` found in a document are **not** followed (validation stays hermetic and
   reproducible). They are listed in the provenance (`declared_in_file.imports`). To use
-  several related documents together, declare each as a set and use `combine = merged`.
+  several related documents together, declare them as one set with `sources` (see below),
+  or declare each as a set and use `combine = merged`.
+* `version = unspecified` (any case) is the same as not setting `version`.
 * Ontology documents (`shacl_ontologies`) are handed to the engine as ontology graph, e.g.
   class hierarchies needed by `sh:class` together with `inference = rdfs`. Their provenance is
   recorded like that of the shapes.
+
+### Sets of documents
+
+A profile split into several files (for instance one file per class) is declared as a
+single set with `sources`: a list of local paths, glob patterns and URLs, one per line or as
+`['a', 'b']`. A glob pattern in `source` (`source = shapes/v1.0/*.ttl`) does the same.
+
+* Patterns are resolved like `source` (against the plugin directory), expanded in sorted
+  order (`**` matches subdirectories) and must match at least one file; a file listed twice
+  is loaded once. URLs are never expanded.
+* The documents are merged into one shapes graph, so shapes in one file can reference
+  shapes in another, and the set is validated in a **single run** whose results are
+  attributed to the set id (also in `separate` mode). Shapes and ontologies can both be sets.
+* The provenance has one entry for the set and the detail of each file in `documents` (see
+  below). `source_type` is `set`, `source` the configured patterns, and `format` the common
+  format (or `mixed`).
+* The SHA-256 of a set is computed over the SHA-256 of its documents (see
+  [What the hash covers](#what-the-hash-covers)); `expected_sha256` pins it, so adding,
+  removing or modifying a file makes the load fail.
+* A set is cached as a whole, so a set with more documents than the cache size is not
+  re-parsed on every load.
 
 ## Python API
 
@@ -92,6 +123,7 @@ report = validate(
         "shapes/basic.ttl",            # str: path or URL
         {"source": "https://example.org/extra.ttl", "version": "3", "id": "extra"},
         ShapesSpec(content=turtle_text, id="inline", name="Inline shapes"),
+        {"id": "modular", "sources": ["modules/*.ttl", "common.ttl"]},  # a set
     ],
     ontologies=None,                   # same kinds of specs, optional
     combine="separate",                # or "merged"
@@ -163,7 +195,14 @@ points, msgs = report.as_indicator_result()   # (points, [{"message", "points"}]
       "triples": 6,
       "declared_in_file": {"title": null, "version": null, "version_property": null, "imports": []},
       "discrepancies": [],
-      "notes": []
+      "notes": [],
+      "documents": [
+        {"source": "/opt/plugin/shapes/person.ttl", "source_type": "file", "final_url": null,
+         "format": "turtle", "sha256": "8929726bed697f1513aa7d0c25828773265b7fa7ba4e8ed79b4d732c65429554",
+         "size_bytes": 306, "triples": 6,
+         "declared_in_file": {"title": null, "version": null, "version_property": null, "imports": []},
+         "notes": []}
+      ]
     }
   ],
   "ontology_provenance": [],
@@ -185,19 +224,21 @@ points, msgs = report.as_indicator_result()   # (points, [{"message", "points"}]
 }
 ```
 
-`shapes_provenance` has one entry per shapes document (`ontology_provenance` has the same
-structure for ontologies):
+`shapes_provenance` has one entry per shape set, a single document or a set of them
+(`ontology_provenance` has the same structure for ontologies):
 
 | field | meaning |
 |---|---|
 | `id`, `name`, `version` | identification of the set. |
 | `name_source` | `config`, `file` (`dcterms:title`) or `id` (nothing else available). |
 | `version_source` | `config`, `file` (`owl:versionInfo`, else `dcterms:hasVersion`) or `unspecified`. |
-| `sha256` | SHA-256 of the document (see below). |
-| `source`, `source_type`, `final_url` | where it was loaded from (`file`, `url` or `inline`); `final_url` is the URL after redirects. |
-| `declared_in_file` | title, version, version property and `owl:imports` declared by the document's `owl:Ontology`. |
-| `discrepancies` | list of `{"field", "config", "file"}` where the configuration and the file disagree. |
+| `sha256` | SHA-256 of the document, or of the set (see below). |
+| `hash_input` | `raw-bytes` for a document, `sorted-document-sha256` for a set. |
+| `source`, `source_type`, `final_url` | where it was loaded from (`file`, `url`, `inline` or `set`); `final_url` is the URL after redirects. |
+| `declared_in_file` | title, version, version property and `owl:imports` declared by the document's `owl:Ontology` (for a set: the values its documents agree on, and all the imports). |
+| `discrepancies` | list of `{"field", "config", "file"}` where the configuration and the file disagree (for a set, with the `document` that disagrees). |
 | `notes` | warnings about the document (ambiguous declarations, no SHACL terms...). |
+| `documents` | one entry per file: `source`, `source_type`, `final_url`, `format`, `sha256`, `size_bytes`, `triples`, `declared_in_file`, `notes`. |
 
 ### Where name and version come from
 
@@ -209,6 +250,10 @@ structure for ontologies):
 * If the configuration and the file disagree, the configured value is reported **and** the
   difference is recorded in `discrepancies` (and logged). If a file declares ambiguous
   metadata (several values or several ontologies), it is ignored and a note is added.
+* For a set, the version declared by its documents is used only if all those that declare
+  one agree (a note says how many do); if they disagree it is `"unspecified"` and a note
+  lists the versions. Each document's own declarations stay in `documents`. The configured
+  name is not compared with the titles of the documents (modules usually have their own).
 
 ### What the hash covers
 
@@ -225,6 +270,17 @@ reproduced with `sha256sum file.ttl`. The consequence is deliberate: the hash id
 *artefact*; re-serialising or re-formatting the same graph changes it. The fields
 `hash_algorithm` / `hash_input` (`"raw-bytes"`) state this in every report. Use
 `expected_sha256` to make a run fail if the shapes are not the ones you pinned.
+
+For a **set**, `sha256` is the SHA-256 of the SHA-256 of its documents (as above), sorted and
+one per line, each line ending in `\n` (`hash_input` is `"sorted-document-sha256"`). It does
+not depend on the names or the order of the files, and changes if a file is added, removed
+or modified. It can be reproduced with:
+
+```bash
+sha256sum shapes/v1.0/*.ttl | cut -d' ' -f1 | LC_ALL=C sort | sha256sum
+```
+
+The hash of each file is in `documents[].sha256`.
 
 `validated_at` is the UTC time of the validation; `software` records the versions of
 pyshacl, rdflib, fair_eva and Python.

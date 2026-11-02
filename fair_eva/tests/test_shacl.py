@@ -809,8 +809,11 @@ def test_report_serialisation_and_provenance_block(monkeypatch, shapes_file):
         "declared_in_file",
         "discrepancies",
         "notes",
+        "documents",
     }
     assert re.fullmatch(r"[0-9a-f]{64}", prov["sha256"])
+    # a single document: the set has one entry with the same hash
+    assert [d["sha256"] for d in prov["documents"]] == [prov["sha256"]]
     assert (prov["name"], prov["version"]) == ("Person shapes", "1.0.0")
     assert data["runs"] == [
         {
