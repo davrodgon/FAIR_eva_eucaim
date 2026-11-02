@@ -137,3 +137,12 @@ def test_indicator_failure_returns_422(client, indicator):
     assert result["points"] == 0
     assert result["test_status"] == "fail"
     assert result["score"] == {"earned": 0, "total": 100}
+
+
+def test_f2_01m_counts_the_terms_present_in_the_metadata(client):
+    # generic terms: title and creator out of 3 (66.67); disciplinar: title (100)
+    response = client.post(
+        "/v1.0/rda/rda_f2_01m",
+        json={"repo": PLUGIN, "id": PID, "api_endpoint": "http://x"},
+    )
+    assert response.json()[PID]["points"] == pytest.approx(83.33, abs=0.01)

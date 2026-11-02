@@ -135,3 +135,72 @@ def test_check_uri_in_term(metadata):
     uris = ut.check_uri_in_term(metadata, "identifier", "doi")
     assert uris == ["| identifier.doi = %s | " % DOI]
     assert ut.check_uri_in_term(metadata, "title", "doi") == []
+
+
+# Missing qualifiers: pandas >= 3 stores None as NaN in string columns, so these
+# fixtures use the default dtype inference on purpose.
+URL_ID = "https://example.org/id/1"
+
+
+@pytest.fixture
+def inferred_metadata():
+    return pd.DataFrame(
+        [
+            ["dc", "identifier", DOI, "doi"],
+            ["dc", "identifier", URL_ID, None],
+            ["dc", "title", "A title", None],
+            ["dc", "creator", "Someone", None],
+        ],
+        columns=["metadata_schema", "element", "text_value", "qualifier"],
+    )
+
+
+@pytest.mark.parametrize("value", [None, float("nan"), pd.NA])
+def test_is_missing(value):
+    assert ut.is_missing(value)
+
+
+@pytest.mark.parametrize("value", ["", "doi", 0, ["a"]])
+def test_is_not_missing(value):
+    assert not ut.is_missing(value)
+
+
+def test_same_qualifier():
+    assert ut.same_qualifier(None, float("nan"))
+    assert ut.same_qualifier("doi", "doi")
+    assert not ut.same_qualifier("doi", None)
+    assert not ut.same_qualifier(float("nan"), "doi")
+
+
+def test_check_metadata_terms_marks_found_terms(inferred_metadata):
+    terms = pd.DataFrame(
+        [["title", None], ["creator", None], ["description", None]],
+        columns=["term", "qualifier"],
+    )
+    result = ut.check_metadata_terms(inferred_metadata, terms)
+    assert result["found"].tolist() == [1, 1, 0]
+
+
+def test_check_metadata_terms_empty_qualifier_matches_missing(inferred_metadata):
+    terms = pd.DataFrame([["title", ""]], columns=["term", "qualifier"])
+    assert ut.check_metadata_terms(inferred_metadata, terms)["found"].tolist() == [1]
+
+
+def test_check_metadata_terms_with_values_inferred_dtype(inferred_metadata):
+    terms = pd.DataFrame(
+        [["title", None], ["identifier", "doi"]], columns=["element", "qualifier"]
+    )
+    result = ut.check_metadata_terms_with_values(inferred_metadata, terms)
+    assert result["text_value"].tolist() == ["A title", DOI, URL_ID]
+
+
+def test_find_ids_in_metadata_missing_qualifier(inferred_metadata):
+    elements = pd.DataFrame([["identifier", None]], columns=["term", "qualifier"])
+    ids = ut.find_ids_in_metadata(inferred_metadata, elements)
+    assert ids["identifier"].tolist() == [URL_ID]
+
+
+def test_check_uri_in_term_missing_qualifier(inferred_metadata):
+    assert ut.check_uri_in_term(inferred_metadata, "identifier", None) == [
+        "| identifier.None = %s | " % URL_ID
+    ]
