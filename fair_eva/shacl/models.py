@@ -19,6 +19,10 @@ UNSPECIFIED = "unspecified"
 #: Hash algorithm and what it is computed over (see ``docs/shacl_validation.md``).
 HASH_ALGORITHM = "sha256"
 HASH_INPUT = "raw-bytes"
+#: A set of several documents is hashed over the sorted SHA-256 of its documents.
+HASH_INPUT_SET = "sorted-document-sha256"
+
+SOURCE_TYPE_SET = "set"
 
 ROLE_SHAPES = "shapes"
 ROLE_ONTOLOGY = "ontology"
@@ -63,12 +67,18 @@ def _clean(value: Optional[str]) -> Optional[str]:
 class ShapesSpec:
     """Where a SHACL shapes document (or an ontology) comes from.
 
-    Exactly one of ``source`` and ``content`` must be given.
+    Exactly one of ``source``, ``sources`` and ``content`` must be given.
 
     Attributes
     ----------
     source : str
-        Local path or ``http(s)://`` URL.
+        Local path or ``http(s)://`` URL.  A local path with glob characters
+        (``*``, ``?``, ``[``) makes the spec a set of documents, like ``sources``.
+    sources : list of str
+        Several local paths, glob patterns or URLs whose documents are merged
+        into one shapes graph (a *set*).  Patterns are expanded in sorted order
+        and must match at least one file.  The SHA-256 of a set is computed over
+        the sorted SHA-256 of its documents (see ``docs/shacl_validation.md``).
     content : str or bytes
         The document itself (inline).  Its SHA-256 is computed over these bytes
         (``str`` is encoded as UTF-8).
@@ -82,9 +92,11 @@ class ShapesSpec:
     name, version : str
         Human metadata.  When omitted, they are read from the document
         (``dcterms:title`` / ``owl:versionInfo`` / ``dcterms:hasVersion`` on an
-        ``owl:Ontology``).  If no version is available it is ``"unspecified"``.
+        ``owl:Ontology``).  If no version is available it is ``"unspecified"``;
+        setting ``version = unspecified`` explicitly means the same.
     expected_sha256 : str
-        Optional pin.  Loading fails if the content has a different SHA-256.
+        Optional pin.  Loading fails if the content has a different SHA-256 (for
+        a set, the SHA-256 of the set).
     timeout : float
         Download timeout in seconds (URLs only).
     base_dir : str
@@ -101,11 +113,14 @@ class ShapesSpec:
     expected_sha256: Optional[str] = None
     timeout: float = 30.0
     base_dir: Optional[str] = None
+    sources: Optional[List[str]] = None
 
     def __post_init__(self):
-        if (self.source is None) == (self.content is None):
+        given = [v is not None for v in (self.source, self.sources, self.content)]
+        if sum(given) != 1:
             raise ShapesConfigError(
-                "A shapes specification needs exactly one of 'source' or 'content'"
+                "A shapes specification needs exactly one of 'source', 'sources' "
+                "or 'content'"
             )
         if self.source is not None:
             self.source = _clean(self.source)
@@ -113,12 +128,27 @@ class ShapesSpec:
                 raise ShapesConfigError(
                     "The 'source' of a shapes specification is empty"
                 )
+        elif self.sources is not None:
+            if isinstance(self.sources, str):
+                self.sources = [self.sources]
+            if not isinstance(self.sources, (list, tuple)) or not all(
+                isinstance(v, str) for v in self.sources
+            ):
+                raise ShapesConfigError("'sources' must be a list of paths or URLs")
+            self.sources = [v.strip() for v in self.sources if v.strip()]
+            if not self.sources:
+                raise ShapesConfigError(
+                    "The 'sources' of a shapes specification are empty"
+                )
         elif not isinstance(self.content, (str, bytes)):
             raise ShapesConfigError("'content' must be str or bytes")
         self.format = _clean(self.format)
         self.id = _clean(self.id)
         self.name = _clean(self.name)
         self.version = _clean(self.version)
+        if self.version and self.version.lower() == UNSPECIFIED:
+            # Same as not declaring it: the version may still come from the file
+            self.version = None
         if self.expected_sha256 is not None:
             self.expected_sha256 = normalize_sha256(self.expected_sha256)
         try:
@@ -223,20 +253,30 @@ class ShapesProvenance:
     declared_in_file: Dict[str, Any] = field(default_factory=dict)
     discrepancies: List[Dict[str, Optional[str]]] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
+    #: One entry per document (``source``, ``source_type``, ``final_url``,
+    #: ``format``, ``sha256``, ``size_bytes``, ``triples``, ``declared_in_file``,
+    #: ``notes``); a single-document spec has exactly one.
+    documents: List[Dict[str, Any]] = field(default_factory=list)
 
     @property
     def has_discrepancies(self) -> bool:
         return bool(self.discrepancies)
 
+    @property
+    def is_set(self) -> bool:
+        """True when the provenance describes a set of several documents."""
+        return self.source_type == SOURCE_TYPE_SET
+
     def describe(self) -> str:
         """One-line human readable description (used in indicator messages)."""
-        text = "%s '%s' (id=%s) version %s, %s %s, source: %s" % (
+        text = "%s '%s' (id=%s) version %s, %s %s%s, source: %s" % (
             self.role,
             self.name,
             self.id,
             self.version,
             self.hash_algorithm,
             self.sha256,
+            " over %d documents" % len(self.documents) if self.is_set else "",
             self.source,
         )
         if self.discrepancies:

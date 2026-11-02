@@ -124,7 +124,7 @@ def test_unknown_set_lists_the_configured_ones(config):
 @pytest.mark.parametrize(
     "ini, message",
     [
-        ("[shacl:a]\nformat = turtle\n", "needs a 'source'"),
+        ("[shacl:a]\nformat = turtle\n", "needs either a 'source'"),
         ("[shacl:a]\nsource = x.ttl\nsourse = typo\n", "Unknown key"),
         ("[shacl:a]\nsource = x.ttl\ntimeout = soon\n", "timeout must be a number"),
         ("[shacl:a]\nsource = x.ttl\nexpected_sha256 = 12\n", "64 hexadecimal"),
