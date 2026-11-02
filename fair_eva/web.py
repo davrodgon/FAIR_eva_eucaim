@@ -533,8 +533,8 @@ def export_pdf():
             result,
             "fair_report.pdf",
             ut.pid_to_url(item_id, ut.get_persistent_id_type(item_id)[0]),
-            "static/img/logo_fair_eosc_2.png",
-            "static/img/csic.png",
+            os.path.join(app.static_folder, "img", "logo_fair_eosc_2.png"),
+            os.path.join(app.static_folder, "img", "csic.png"),
             result_points,
         )
         # pdf_output = pdfkit.from_file('fair_report.pdf','.')

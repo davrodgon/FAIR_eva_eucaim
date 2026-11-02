@@ -477,6 +477,22 @@ def pdf(web, api, monkeypatch):
     return create_pdf
 
 
+def test_export_pdf_generates_a_real_report(client, api, monkeypatch, tmp_path):
+    # No mocked create_pdf: the API answer has the shape rda_all returns, with the
+    # feedback of each indicator as a list of messages. The working directory is
+    # not the repository, so the logos must not be looked up relative to it.
+    monkeypatch.chdir(tmp_path)
+    payload = make_api_result()
+    for group in payload["fair_dummy"].values():
+        for indicator in group.values():
+            indicator["score"]["earned"] = indicator["points"]
+    api.return_value = FakeResponse(payload)
+    response = client.get("/en/export_pdf?item_id=%s&repo=dummy" % DOI)
+    assert response.status_code == 200
+    assert response.mimetype == "application/pdf"
+    assert response.data.startswith(b"%PDF")
+
+
 def test_export_pdf(client, api, pdf):
     response = client.get("/en/export_pdf?item_id=%s&repo=dummy" % DOI)
     assert response.status_code == 200
