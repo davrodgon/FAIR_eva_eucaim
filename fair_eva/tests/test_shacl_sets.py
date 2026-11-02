@@ -271,10 +271,10 @@ def test_a_set_larger_than_the_cache_is_parsed_once(tmp_path, monkeypatch):
 
 def test_provenance_of_a_cached_set_is_not_shared(modules):
     spec = {"id": "s", "source": str(modules / "*.ttl")}
-    load_shapes(spec).provenance.documents[0]["declared_in_file"]["imports"].append(
-        "x"
+    load_shapes(spec).provenance.documents[0]["declared_in_file"]["imports"].append("x")
+    assert (
+        load_shapes(spec).provenance.documents[0]["declared_in_file"]["imports"] == []
     )
-    assert load_shapes(spec).provenance.documents[0]["declared_in_file"]["imports"] == []
 
 
 def test_merged_graph_is_cached_until_the_content_changes(modules):
