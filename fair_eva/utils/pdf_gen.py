@@ -3,10 +3,11 @@ import os
 import sys
 from datetime import datetime
 from io import BytesIO
+from xml.sax.saxutils import escape
 
 from bs4 import BeautifulSoup
 from flask_babel import gettext as _l
-from PyPDF2 import PdfFileMerger
+from pypdf import PdfWriter
 from reportlab.graphics.charts.barcharts import VerticalBarChart
 from reportlab.graphics.shapes import Drawing
 from reportlab.lib import colors
@@ -86,15 +87,30 @@ def create_last_page(logos_CSIC, name_pdf, estilos):
 
 def merge_pdf(pdf1, pdf2, name_file):
     # Une los pdfs pdf1 y pdf2 y guarda el resultado en un fichero llamado name_file.
-    pdfs = [pdf1, pdf2]
-    nombre_archivo_salida = name_file
-    fusionador = PdfFileMerger()
+    fusionador = PdfWriter()
+    for pdf in [pdf1, pdf2]:
+        fusionador.append(pdf)
 
-    for pdf in pdfs:
-        fusionador.append(open(pdf, "rb"))
-
-    with open(nombre_archivo_salida, "wb") as salida:
+    with open(name_file, "wb") as salida:
         fusionador.write(salida)
+    fusionador.close()
+
+
+def msg_to_text(msg, max_length):
+    """Feedback of an indicator as Paragraph markup.
+
+    Indicators return either a string or a list of {"message", "points"} dicts.
+    The text is truncated to max_length and escaped, since Paragraph parses markup.
+    """
+    if isinstance(msg, (list, tuple)):
+        lines = [
+            str(item.get("message", "")) if isinstance(item, dict) else str(item)
+            for item in msg
+        ]
+        text = "\n".join(line for line in lines if line)
+    else:
+        text = "" if msg is None else str(msg)
+    return escape(text[:max_length]).replace("\n", "<br/>")
 
 
 def bar_FAIR(data):
@@ -216,7 +232,7 @@ def indicator_table(data):
                 _l("Technical Implementation"),
                 Paragraph(_l("%s.technical" % data["name"])),
             ),
-            (_l("Technical feedback"), Paragraph(data["msg"][:500])),
+            (_l("Technical feedback"), Paragraph(msg_to_text(data["msg"], 500))),
         ]
     else:
         st = BeautifulSoup(_l("%s.tips" % data["name"]))
@@ -228,7 +244,7 @@ def indicator_table(data):
                 _l("Technical Implementation"),
                 Paragraph(_l("%s.technical" % data["name"])),
             ),
-            (_l("Technical feedback"), Paragraph(data["msg"][:350])),
+            (_l("Technical feedback"), Paragraph(msg_to_text(data["msg"], 350))),
             (_l("Tips"), Paragraph(tips)),
         ]
     return table
