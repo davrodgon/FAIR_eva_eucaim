@@ -201,6 +201,18 @@ def pid_to_url(pid, pid_type):
         return idutils.to_url(pid, pid_type)
 
 
+def is_missing(value):
+    """True for None and for the NaN that pandas (>= 3) uses for missing strings."""
+    return value is None or (pd.api.types.is_scalar(value) and bool(pd.isna(value)))
+
+
+def same_qualifier(qualifier, other):
+    """Compares two qualifiers, treating every missing value (None/NaN) as equal."""
+    if is_missing(qualifier) or is_missing(other):
+        return is_missing(qualifier) and is_missing(other)
+    return qualifier == other
+
+
 def find_ids_in_metadata(metadata, elements):
     """find_ids_in_metadata Returns the list of identifiers found in metadata nad its
     types.
@@ -225,9 +237,9 @@ def find_ids_in_metadata(metadata, elements):
             )
             if "qualifier" in elements:
                 logging.debug("Qualifier in elements?? %s" % (elements))
-                if (
-                    row["qualifier"]
-                    in elements.qualifier[
+                if any(
+                    same_qualifier(row["qualifier"], qualifier)
+                    for qualifier in elements.qualifier[
                         elements[elements["term"] == row["element"]].index.values
                     ].tolist()
                 ):
@@ -276,7 +288,7 @@ def check_uri_in_term(metadata, term, qualifier):
     uris = []
     for index, row in metadata.iterrows():
         if row["element"] == term:
-            if row["qualifier"] == qualifier:
+            if same_qualifier(row["qualifier"], qualifier):
                 potential_id = row["text_value"]
                 print(potential_id)
                 if len(idutils.detect_identifier_schemes(potential_id)):
@@ -307,12 +319,12 @@ def check_metadata_terms(metadata, terms):
         if row["element"] in terms.term.tolist():
             for k, v in terms[terms["term"] == row["element"]].iterrows():
                 try:
-                    if row["qualifier"] == v.qualifier or (
-                        row["qualifier"] is None and v.qualifier == ""
+                    if same_qualifier(row["qualifier"], v.qualifier) or (
+                        is_missing(row["qualifier"]) and v.qualifier == ""
                     ):
-                        terms.found[k] = 1
+                        terms.loc[k, "found"] = 1
                         if "text_value" in terms:
-                            terms.text_value[k] = row["text_value"]
+                            terms.loc[k, "text_value"] = row["text_value"]
                 except Exception as e:
                     logging.error("Problem in check_metadata_terms: %s" % e)
     return terms
@@ -337,7 +349,7 @@ def check_metadata_terms_with_values(metadata, terms):
         # Select matching metadata row
         _df = metadata.loc[
             (metadata["element"] == _element)
-            & (metadata["qualifier"].apply(lambda x: x in [None, _qualifier]))
+            & (metadata["qualifier"].apply(lambda x: is_missing(x) or x == _qualifier))
             & (metadata["text_value"] != "")
         ]
         if _df.empty:
@@ -404,7 +416,7 @@ def check_metadata_terms_with_values(metadata, terms):
         # Select matching metadata row
         _df = metadata.loc[
             (metadata["element"] == _element)
-            & (metadata["qualifier"].apply(lambda x: x in [None, _qualifier]))
+            & (metadata["qualifier"].apply(lambda x: is_missing(x) or x == _qualifier))
             & (metadata["text_value"] != "")
         ]
         if _df.empty:
@@ -486,9 +498,9 @@ def metadata_human_accessibility(metadata, url):
     found_items = 0
     logging.debug("TEST A102M: Metadata: %s" % metadata)
     for index, text in metadata.iterrows():
-        if (text["text_value"] is not None and text["text_value"] in response.text) or (
-            "%s.%s" % (text["element"], text["qualifier"]) in response.text
-        ):
+        if (
+            not is_missing(text["text_value"]) and text["text_value"] in response.text
+        ) or ("%s.%s" % (text["element"], text["qualifier"]) in response.text):
             msg = msg + ("FOUND: %s.%s | \n" % (text["element"], text["qualifier"]))
             found_items = found_items + 1
         else:
