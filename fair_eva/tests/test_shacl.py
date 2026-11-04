@@ -925,3 +925,19 @@ def test_concurrent_validations_share_the_cached_shapes(shapes_file):
         outcomes = set(pool.map(run, range(24)))
     assert len(outcomes) == 1
     assert next(iter(outcomes))[0] == 1
+
+
+def test_engine_messages_use_the_prefixes_of_the_shapes_document():
+    shapes = """
+    @prefix sh: <http://www.w3.org/ns/shacl#> .
+    @prefix dct: <http://purl.org/dc/terms/> .
+    @prefix ex: <http://example.org/> .
+    ex:DocShape a sh:NodeShape ;
+        sh:targetClass ex:Doc ;
+        sh:property [ sh:path dct:title ; sh:minCount 1 ] .
+    """
+    report = validate(
+        "@prefix ex: <http://example.org/> . ex:d a ex:Doc .",
+        {"id": "s", "content": shapes},
+    )
+    assert "dct:title" in report.results[0].message
