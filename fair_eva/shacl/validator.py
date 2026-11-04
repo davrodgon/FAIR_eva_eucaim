@@ -225,8 +225,10 @@ def _sort_key(result: ShaclResult) -> Tuple:
 # --------------------------------------------------------------------------- #
 def _copy_graph(graph: Graph) -> Graph:
     copy = Graph()
+    # Same prefixes as the original (rdflib's defaults would otherwise win), so that
+    # the engine names paths and nodes in its messages as the shapes document does.
     for prefix, namespace in graph.namespaces():
-        copy.bind(prefix, namespace, override=False)
+        copy.bind(prefix, namespace)
     copy += graph
     return copy
 

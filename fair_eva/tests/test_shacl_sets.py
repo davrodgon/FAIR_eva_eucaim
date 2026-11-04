@@ -10,6 +10,7 @@ import shutil
 import subprocess
 
 import pytest
+from rdflib import Graph
 
 from fair_eva.shacl import (
     UNSPECIFIED,
@@ -411,3 +412,36 @@ def test_source_and_sources_together_are_rejected():
     config = config_with("[shacl:p]\nsource = a.ttl\nsources = ['b.ttl']\n")
     with pytest.raises(ShapesConfigError, match="either a 'source'"):
         shapes_from_config(config, selection=["p"])
+
+
+DCT_MODULE = """
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix dct: <http://purl.org/dc/terms/> .
+@prefix ex: <http://example.org/> .
+ex:DocShape a sh:NodeShape ;
+    sh:targetClass ex:Doc ;
+    sh:property [ sh:path dct:title ; sh:minCount 1 ] .
+"""
+
+
+OTHER_MODULE = """
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix ex: <http://example.org/> .
+ex:OtherShape a sh:NodeShape ;
+    sh:targetClass ex:Other ;
+    sh:property [ sh:path ex:name ; sh:minCount 1 ] .
+"""
+
+
+def test_the_merged_graph_keeps_the_prefixes_of_the_documents(tmp_path):
+    # rdflib binds dcterms: by default; parsing the documents in sequence uses theirs
+    # (dct:), and so must the merged graph.
+    (tmp_path / "a.ttl").write_text(DCT_MODULE)
+    (tmp_path / "b.ttl").write_text(OTHER_MODULE)
+    graph = load_shapes({"id": "s", "source": str(tmp_path / "*.ttl")}).graph
+    sequential = Graph()
+    for name in ("a.ttl", "b.ttl"):
+        sequential.parse(tmp_path / name, format="turtle")
+    title = "http://purl.org/dc/terms/title"
+    assert graph.namespace_manager.normalizeUri(title) == "dct:title"
+    assert dict(graph.namespaces()) == dict(sequential.namespaces())

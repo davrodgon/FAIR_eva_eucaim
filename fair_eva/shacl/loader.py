@@ -421,11 +421,12 @@ def _parse_all(documents: List[_Document], role: str, set_id: str) -> _Parsed:
     if len(graphs) == 1:
         graph = graphs[0]
     else:
+        # Parse the documents in sequence into one graph (they parsed fine one by one):
+        # the prefixes they declare then replace rdflib's default ones (dct: rather than
+        # dcterms:), exactly as when the files are loaded one after another.
         graph = Graph()
-        for part in graphs:
-            for prefix, namespace in part.namespaces():
-                graph.bind(prefix, namespace, override=False)
-            graph += part
+        for document in documents:
+            graph.parse(data=document.raw, format=document.fmt, publicID=document.base)
     parsed = _Parsed(
         graph=graph,
         documents=[(len(g),) + declared_metadata(g) for g in graphs],
